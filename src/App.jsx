@@ -344,7 +344,7 @@ function App() {
             <h1 className="text-accent-orange" style={{ fontSize: '2rem' }}>
               WrangLED <span style={{ color: 'var(--neutral-base)', fontWeight: 300 }}>Fast-Track</span>
             </h1>
-            <p style={{ opacity: 0.8, marginTop: '0.25rem', fontSize: '0.9rem' }}>PyTexas 2025 · 6-Day Build Plan · Discord Matrix</p>
+            <p style={{ opacity: 0.8, marginTop: '0.25rem', fontSize: '0.9rem' }}>PyTexas 2026 · 20th Anniversary · 6-Day Build Plan · Discord Matrix</p>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.9rem', fontFamily: 'var(--font-mono)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
