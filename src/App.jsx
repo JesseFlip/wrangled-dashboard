@@ -308,7 +308,260 @@ const LaunchProtocol = () => (
 );
 
 
-// --- Main App Component ---
+// 5. Road to Austin (The Story)
+const RoadToAustin = () => {
+  return (
+    <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+        <h1 className="text-accent-orange" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>PyTexas 2025</h1>
+        <h2>The Road to Austin</h2>
+        <p className="text-subtle" style={{ fontSize: '1.2rem' }}>Community · Code · Connection <br/> April 17–19, 2026 · Austin Central Library</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8">
+        
+        {/* The Story So Far */}
+        <div className="glass-panel">
+          <h3 className="text-accent-green" style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '0.5rem' }}>The Story So Far</h3>
+          <p className="text-subtle" style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}>One community, twelve months of building toward April.</p>
+          <div className="flex-col gap-4 flex" style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--accent-blue)' }}>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: '#64748b' }}></span>
+              <span className="font-mono" style={{ color: '#64748b', marginRight: '1rem' }}>Late 2024</span> Jesse becomes Community Committee Chair — AI Night concept is born
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Jan 2025</span> PyTexas AI Night launches as monthly virtual lightning talk series on Discord
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-orange)' }}></span>
+              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Feb 2026</span> Jesse separates from SGWS — commits full-time to PyTexas & Per Scholas
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Mar 25</span> AI Night: Jim presents Lumbergh — standout talk of the season. WrangLED is born.
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Apr 7</span> AI Night: Simon Merrick (New Zealand) presents Python 3.14 t-strings
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-orange)' }}></span>
+              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Apr 12</span> WrangLED hardware: first LED panel lights up at 2:17 AM 🔥
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: '#FCD34D' }}></span>
+              <span className="font-mono" style={{ color: '#B45309', marginRight: '1rem' }}>Apr 17-19</span> PyTexas 2025 — Austin Central Library. It all comes together.
+            </div>
+          </div>
+        </div>
+
+        {/* AI Night */}
+        <div className="grid grid-cols-2 gap-8">
+          <div className="glass-panel">
+            <h3 className="text-accent-green">Chapter 1: AI Night is Born</h3>
+            <p className="text-subtle" style={{ marginBottom: '1rem' }}>Monthly virtual lightning talks — founded by Jesse.</p>
+            <div className="flex-col gap-2 flex text-subtle">
+              <div className="info-card"><strong>Format:</strong> 5–15 min talks, Discord Stage, 3rd Tuesdays 7 PM CST</div>
+              <div className="info-card"><strong>Speaker Selection:</strong> Google Form signups + wheelofnames.com</div>
+              <div className="info-card"><strong>Community:</strong> Low barrier — 'Show us what you're tinkering with'</div>
+              <div className="info-card"><strong>Growth:</strong> Monthly touchpoint building community</div>
+            </div>
+          </div>
+          
+          <div className="glass-panel text-subtle">
+             <h3 className="text-accent-blue" style={{ marginBottom: '1.5rem' }}>Notable Speakers</h3>
+             <div className="info-card" style={{ borderLeft: '4px solid var(--accent-green)', marginBottom: '1rem' }}>
+                <div className="font-mono text-accent-green" style={{ fontSize: '0.85rem' }}>Mar 25, 2026</div>
+                <h4 style={{ color: 'var(--neutral-dark)' }}>Jim (CowboyQuant)</h4>
+                <div>Lumbergh — AI coding dashboard</div>
+                <div className="text-accent-orange mt-1">Talk of the season 🏆</div>
+             </div>
+             <div className="info-card" style={{ borderLeft: '4px solid var(--accent-green)' }}>
+                <div className="font-mono text-accent-green" style={{ fontSize: '0.85rem' }}>Apr 7, 2026</div>
+                <h4 style={{ color: 'var(--neutral-dark)' }}>Simon Merrick (NZ)</h4>
+                <div>Python 3.14 t-strings</div>
+                <div className="text-accent-orange mt-1">Kiwi PyCon alum</div>
+             </div>
+          </div>
+        </div>
+
+        {/* Origin & Hardware */}
+        <div className="grid grid-cols-2 gap-8">
+          <div className="glass-panel bg-accent-orange" style={{ color: 'white' }}>
+            <h3 style={{ color: 'white' }}>Chapter 2: WrangLED Origin Story</h3>
+            <p style={{ fontSize: '1.25rem', fontStyle: 'italic', marginBottom: '1.5rem' }}>"What if virtual attendees could control the LEDs?"</p>
+            <ul style={{ paddingLeft: '1.25rem', lineHeight: '1.8' }}>
+              <li>Jim presents Lumbergh at AI Night — March 25</li>
+              <li>Jesse & Jim connect on YouTube/TikTok collab idea</li>
+              <li>Idea evolves: build something live for PyTexas</li>
+              <li>PyTexas Build Log series concept is born</li>
+              <li>Hardware ordered — Pi 4, SP803E, BTF 8x32 matrix</li>
+              <li>Jim joins Jesse's Tailscale network to build remotely</li>
+            </ul>
+            <p style={{ marginTop: '1rem', fontStyle: 'italic', opacity: 0.8 }}>"Only a week to pull it off lol" — Jim</p>
+          </div>
+
+          <div className="glass-panel">
+            <h3 className="text-accent-orange">Chapter 4: Building in the Kitchen</h3>
+            <div className="grid grid-cols-2 gap-4 text-center mt-4 mb-6">
+              <div className="info-card bg-neutral-dark text-white" style={{ background: 'var(--neutral-dark)' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-orange)' }}>2</div>
+                <div className="text-subtle font-mono">Panels wired</div>
+              </div>
+              <div className="info-card bg-neutral-dark text-white" style={{ background: 'var(--neutral-dark)' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-orange)' }}>1</div>
+                <div className="text-subtle font-mono">Very late night</div>
+              </div>
+              <div className="info-card bg-neutral-dark text-white" style={{ background: 'var(--neutral-dark)' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-orange)' }}>256</div>
+                <div className="text-subtle font-mono">Total LEDs</div>
+              </div>
+              <div className="info-card bg-neutral-dark text-white" style={{ background: 'var(--neutral-dark)' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-orange)' }}>20A</div>
+                <div className="text-subtle font-mono">PSU capacity</div>
+              </div>
+            </div>
+            <p className="text-subtle text-center">SP803E Controller + PSU wired by Jesse & Dorys.<br/>First panel lit at 2:17 AM 🔥</p>
+          </div>
+        </div>
+
+        {/* Conference Prep */}
+        <div className="glass-panel text-center">
+            <h3 className="text-accent-orange" style={{ justifyContent: 'center' }}>Chapter 3: Conference Prep</h3>
+            <p className="text-subtle mb-6">Austin Central Library — 6 signs, 3 floors, 1 rooftop party</p>
+            <div className="grid grid-cols-3 gap-4 text-left">
+                <div className="info-card">
+                    <h4>Welcome / Main Entrance</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>24x36 A-frame (x2 sides)</p>
+                </div>
+                <div className="info-card">
+                    <h4>Registration & Check-In</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>24x36 A-frame</p>
+                </div>
+                 <div className="info-card">
+                    <h4>Friday Tutorial Day</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>24x36 A-frame insert</p>
+                </div>
+                <div className="info-card">
+                    <h4>Rooftop Party Directional</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>24x36 A-frame (Lobby to elevator)</p>
+                </div>
+                <div className="info-card">
+                    <h4>Rooftop Arrival Welcome</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>24x36 A-frame (Placed at landing)</p>
+                </div>
+                <div className="info-card">
+                    <h4>Hallway Arrow Signs</h4>
+                    <p className="text-subtle font-mono" style={{ color: '#B45309' }}>8.5x11 paper (xMultiple)</p>
+                </div>
+            </div>
+        </div>
+
+        {/* The Team */}
+        <div className="glass-panel">
+          <h3 className="text-accent-green" style={{ marginBottom: '1.5rem' }}>The People Making It Happen</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="info-card" style={{ borderTop: '4px solid var(--accent-orange)' }}>
+              <div className="flex gap-4 items-center mb-2">
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-orange)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>JF</div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Jesse Flippen</h4>
+                  <div className="text-accent-orange" style={{ fontSize: '0.85rem' }}>Community Committee Chair</div>
+                </div>
+              </div>
+              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>Founded AI Night · WrangLED hardware · Conference logistics · Per Scholas cybersecurity cohort</p>
+            </div>
+
+            <div className="info-card" style={{ borderTop: '4px solid var(--accent-green)' }}>
+              <div className="flex gap-4 items-center mb-2">
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-green)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>JV</div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Jim (CowboyQuant)</h4>
+                  <div className="text-accent-green" style={{ fontSize: '0.85rem' }}>Software Lead / Lumbergh Creator</div>
+                </div>
+              </div>
+              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>FastAPI + WebSocket architecture · Lumbergh AI dashboard · YouTube collab</p>
+            </div>
+
+            <div className="info-card" style={{ borderTop: '4px solid #8B5CF6' }}>
+              <div className="flex gap-4 items-center mb-2">
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#8B5CF6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>KE</div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Kevin</h4>
+                  <div style={{ color: '#8B5CF6', fontSize: '0.85rem' }}>Discord Bot Engineer</div>
+                </div>
+              </div>
+              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>Bot deployment on Mason's VPS · Integration with Jim's FastAPI endpoint</p>
+            </div>
+            
+            <div className="info-card" style={{ borderTop: '4px solid #FBCFE8' }}>
+               <div className="flex gap-4 items-center mb-2">
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#FCD34D', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>ME</div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Mason Egger</h4>
+                  <div style={{ color: '#B45309', fontSize: '0.85rem' }}>PyTexas President</div>
+                </div>
+              </div>
+              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>Conference coordination · VPS host (pytx-bot.egger.codes) · Monday deadline holder</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Conference Week Schedule */}
+        <div className="glass-panel">
+            <h3 className="text-accent-orange" style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '0.5rem' }}>Conference Week — April 17–19</h3>
+            <div className="grid grid-cols-3 gap-6 mt-6">
+                <div className="info-card" style={{ borderTop: '4px solid var(--accent-green)' }}>
+                   <h4 className="text-center mb-4">Friday Apr 17</h4>
+                   <ul className="text-subtle" style={{ listStyle: 'none', lineHeight: '2' }}>
+                     <li>🟢 Tutorial Day</li>
+                     <li>🟢 Signage deployed</li>
+                     <li>🟢 Registration opens</li>
+                     <li>🟢 WrangLED goes live on hotspot</li>
+                   </ul>
+                </div>
+                <div className="info-card" style={{ borderTop: '4px solid #FCD34D' }}>
+                   <h4 className="text-center mb-4">Saturday Apr 18</h4>
+                   <ul className="text-subtle" style={{ listStyle: 'none', lineHeight: '2' }}>
+                     <li>🟡 Full talk day</li>
+                     <li>🟡 Discord bot commands → LEDs</li>
+                     <li>🟡 Rooftop party (night)</li>
+                     <li>🟡 Virtual attendees control the matrix</li>
+                   </ul>
+                </div>
+                <div className="info-card" style={{ borderTop: '4px solid var(--accent-orange)' }}>
+                   <h4 className="text-center mb-4">Sunday Apr 19</h4>
+                   <ul className="text-subtle" style={{ listStyle: 'none', lineHeight: '2' }}>
+                     <li>🟠 Final talks</li>
+                     <li>🟠 PyTexas Build Log: Episode 1 captured</li>
+                     <li>🟠 Community wrap-up</li>
+                     <li>🟠 See you next year 🐍</li>
+                   </ul>
+                </div>
+            </div>
+        </div>
+        
+        {/* End Slide */}
+        <div className="glass-panel text-center bg-neutral-dark" style={{ color: 'white' }}>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'white' }}>WrangLED isn't just a hardware project.</h2>
+            <p className="text-accent-orange" style={{ fontSize: '1.25rem', marginBottom: '2rem' }}>It's what happens when the Python community builds something together.</p>
+            <div className="grid grid-cols-2 gap-4 text-left">
+                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🌐 Virtual attendees become part of the in-person experience</div>
+                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🛠️ Open source from day one — built live, documented in the open</div>
+                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>📹 PyTexas Build Log — conference becomes Episode 1</div>
+                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🤝 Four contributors, two cities, one deadline</div>
+            </div>
+            <div style={{ marginTop: '3rem', padding: '1rem', background: 'var(--accent-green)', borderRadius: 'var(--radius-lg)'}}>
+                <h3 style={{ margin: 0, justifyContent: 'center', color: 'var(--neutral-dark)' }}>Built with Python · Community · Way too little sleep</h3>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -361,6 +614,7 @@ function App() {
       <nav className="nav-tabs">
         <div style={{ display: 'flex', width: '100%', maxWidth: '1200px' }}>
           {[
+            { id: 'story', label: 'Road to Austin' },
             { id: 'overview', label: 'Command Center' },
             { id: 'hardware', label: 'Hardware & Pi (Jesse)' },
             { id: 'software', label: 'Software & Bot (Jim)' },
@@ -379,6 +633,7 @@ function App() {
 
       {/* Main Content Area */}
       <main className="container flex-col" style={{ flexGrow: 1 }}>
+        {activeTab === 'story' && <RoadToAustin />}
         {activeTab === 'overview' && <CommandCenter tasks={tasks} />}
         {activeTab === 'hardware' && <HardwareLane tasks={tasks} toggleTask={toggleTask} />}
         {activeTab === 'software' && <SoftwareLane tasks={tasks} toggleTask={toggleTask} />}
