@@ -68,7 +68,7 @@ const CommandCenter = ({ tasks }) => {
     <div className="animate-fade-in">
       <div style={{ marginBottom: '2rem' }}>
         <h2>Project Status</h2>
-        <p className="text-subtle">High-level tracking for the WrangLED PyTexas build. Both tracks must be completed by Monday to allow buffer time for integration testing.</p>
+        <p className="text-subtle">High-level tracking for the PyTexas Build Log. Both tracks must be completed by Monday to allow buffer time for integration testing.</p>
       </div>
 
       <div className="grid grid-cols-3">
@@ -313,9 +313,9 @@ const RoadToAustin = () => {
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-        <h1 className="text-accent-orange" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>PyTexas 2025</h1>
+        <h1 className="text-accent-orange" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>PyTexas 2026</h1>
         <h2>The Road to Austin</h2>
-        <p className="text-subtle" style={{ fontSize: '1.2rem' }}>Community · Code · Connection <br/> April 17–19, 2026 · Austin Central Library</p>
+        <p className="text-subtle" style={{ fontSize: '1.2rem' }}>Community · Code · Connection <br/> 20th Anniversary · April 17–19, 2026 · Austin Central Library</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -327,31 +327,31 @@ const RoadToAustin = () => {
           <div className="flex-col gap-4 flex" style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--accent-blue)' }}>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: '#64748b' }}></span>
-              <span className="font-mono" style={{ color: '#64748b', marginRight: '1rem' }}>Late 2024</span> Jesse becomes Community Committee Chair — AI Night concept is born
-            </div>
-            <div className="relative">
-              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Jan 2025</span> PyTexas AI Night launches as monthly virtual lightning talk series on Discord
+              <span className="font-mono" style={{ color: '#64748b', marginRight: '1rem' }}>Apr 2025</span> Jesse becomes Community Committee Chair
             </div>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-orange)' }}></span>
-              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Feb 2026</span> Jesse separates from SGWS — commits full-time to PyTexas & Per Scholas
+              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Feb 2026</span> PyTexas AI Night launches on Discord. Jesse commits full-time to PyTexas & Per Scholas.
             </div>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Mar 25</span> AI Night: Jim presents Lumbergh — standout talk of the season. WrangLED is born.
+              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Mar 25</span> AI Night: Jim presents Lumbergh — standout talk of the season.
             </div>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Apr 7</span> AI Night: Simon Merrick (New Zealand) presents Python 3.14 t-strings
+              <span className="font-mono text-accent-green" style={{ marginRight: '1rem' }}>Apr 7</span> PyTexas First Tuesdays: Simon Merrick (New Zealand) presents Python 3.14 t-strings
+            </div>
+            <div className="relative">
+              <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-blue)' }}></span>
+              <span className="font-mono text-accent-blue" style={{ marginRight: '1rem' }}>Apr 9</span> Thursday, DFW Pythoneers at Improving Building: Official agreement for the PyTexas Build Log!
             </div>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-orange)' }}></span>
-              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Apr 12</span> WrangLED hardware: first LED panel lights up at 2:17 AM 🔥
+              <span className="font-mono text-accent-orange" style={{ marginRight: '1rem' }}>Apr 12</span> PyTexas Build Log hardware: first LED panel lights up at 2:17 AM 🔥
             </div>
             <div className="relative">
               <span style={{ position: 'absolute', left: '-1.45rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', background: '#FCD34D' }}></span>
-              <span className="font-mono" style={{ color: '#B45309', marginRight: '1rem' }}>Apr 17-19</span> PyTexas 2025 — Austin Central Library. It all comes together.
+              <span className="font-mono" style={{ color: '#B45309', marginRight: '1rem' }}>Apr 17-19</span> PyTexas 2026 — Austin Central Library. It all comes together.
             </div>
           </div>
         </div>
@@ -389,13 +389,13 @@ const RoadToAustin = () => {
         {/* Origin & Hardware */}
         <div className="grid grid-cols-2 gap-8">
           <div className="glass-panel bg-accent-orange" style={{ color: 'white' }}>
-            <h3 style={{ color: 'white' }}>Chapter 2: WrangLED Origin Story</h3>
+            <h3 style={{ color: 'white' }}>Chapter 2: PyTexas Build Log Origin Story</h3>
             <p style={{ fontSize: '1.25rem', fontStyle: 'italic', marginBottom: '1.5rem' }}>"What if virtual attendees could control the LEDs?"</p>
             <ul style={{ paddingLeft: '1.25rem', lineHeight: '1.8' }}>
               <li>Jim presents Lumbergh at AI Night — March 25</li>
               <li>Jesse & Jim connect on YouTube/TikTok collab idea</li>
               <li>Idea evolves: build something live for PyTexas</li>
-              <li>PyTexas Build Log series concept is born</li>
+              <li>Official agreement at DFW Pythoneers (Improving Building) — April 9</li>
               <li>Hardware ordered — Pi 4, SP803E, BTF 8x32 matrix</li>
               <li>Jim joins Jesse's Tailscale network to build remotely</li>
             </ul>
@@ -470,7 +470,7 @@ const RoadToAustin = () => {
                   <div className="text-accent-orange" style={{ fontSize: '0.85rem' }}>Community Committee Chair</div>
                 </div>
               </div>
-              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>Founded AI Night · WrangLED hardware · Conference logistics · Per Scholas cybersecurity cohort</p>
+              <p className="text-subtle" style={{ fontSize: '0.85rem' }}>Founded AI Night · PyTexas Build Log hardware · Conference logistics · Per Scholas cybersecurity cohort</p>
             </div>
 
             <div className="info-card" style={{ borderTop: '4px solid var(--accent-green)' }}>
@@ -518,7 +518,7 @@ const RoadToAustin = () => {
                      <li>🟢 Tutorial Day</li>
                      <li>🟢 Signage deployed</li>
                      <li>🟢 Registration opens</li>
-                     <li>🟢 WrangLED goes live on hotspot</li>
+                     <li>🟢 PyTexas Build Log goes live on hotspot</li>
                    </ul>
                 </div>
                 <div className="info-card" style={{ borderTop: '4px solid #FCD34D' }}>
@@ -544,13 +544,10 @@ const RoadToAustin = () => {
         
         {/* End Slide */}
         <div className="glass-panel text-center bg-neutral-dark" style={{ color: 'white' }}>
-            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'white' }}>WrangLED isn't just a hardware project.</h2>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'white' }}>PyTexas Build Log isn't just a hardware project.</h2>
             <p className="text-accent-orange" style={{ fontSize: '1.25rem', marginBottom: '2rem' }}>It's what happens when the Python community builds something together.</p>
-            <div className="grid grid-cols-2 gap-4 text-left">
-                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🌐 Virtual attendees become part of the in-person experience</div>
-                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🛠️ Open source from day one — built live, documented in the open</div>
-                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>📹 PyTexas Build Log — conference becomes Episode 1</div>
-                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white' }}>🤝 Four contributors, two cities, one deadline</div>
+            <div className="grid grid-cols-1 gap-4 text-center" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <div className="info-card bg-neutral-dark" style={{ background: '#1A202C', border: '1px solid #2D3748', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🌐 Virtual attendees become part of the in-person experience</div>
             </div>
             <div style={{ marginTop: '3rem', padding: '1rem', background: 'var(--accent-green)', borderRadius: 'var(--radius-lg)'}}>
                 <h3 style={{ margin: 0, justifyContent: 'center', color: 'var(--neutral-dark)' }}>Built with Python · Community · Way too little sleep</h3>
@@ -595,7 +592,7 @@ function App() {
         <div className="header-content">
           <div>
             <h1 className="text-accent-orange" style={{ fontSize: '2rem' }}>
-              WrangLED <span style={{ color: 'var(--neutral-base)', fontWeight: 300 }}>Fast-Track</span>
+              PyTexas Build Log <span style={{ color: 'var(--neutral-base)', fontWeight: 300 }}>Fast-Track</span>
             </h1>
             <p style={{ opacity: 0.8, marginTop: '0.25rem', fontSize: '0.9rem' }}>PyTexas 2026 · 20th Anniversary · 6-Day Build Plan · Discord Matrix</p>
           </div>
