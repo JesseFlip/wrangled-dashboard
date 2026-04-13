@@ -6,7 +6,6 @@ import json
 import logging
 
 import httpx
-from pydantic import BaseModel
 from wrangled_contracts import (
     EFFECT_DEFAULTS,
     EFFECT_FX_ID,
@@ -18,6 +17,7 @@ from wrangled_contracts import (
     EffectCommand,
     PowerCommand,
     PresetCommand,
+    PushResult,
     TextCommand,
     WledDevice,
 )
@@ -106,14 +106,6 @@ def _build_command_body(command: Command) -> dict:
 def _build_preset_bodies(cmd: PresetCommand) -> list[dict]:
     """Expand a PresetCommand into a list of WLED bodies."""
     return [_build_command_body(sub) for sub in PRESETS[cmd.name]]
-
-
-class PushResult(BaseModel):
-    """Outcome of a push_command call."""
-
-    ok: bool
-    status: int | None = None
-    error: str | None = None
 
 
 async def _post_one(
