@@ -161,3 +161,57 @@ def test_post_command_reports_push_failure(app_with_registry) -> None:
     body = response.json()
     assert body["ok"] is False
     assert body["status"] == 500
+
+
+# --- Task 7: name ---
+
+
+def test_put_name_updates_device(app_with_registry, registry_with_one) -> None:
+    renamed_data = _dev().model_dump()
+    renamed_data["name"] = "Stage-Left"
+    updated = WledDevice.model_validate(renamed_data)
+
+    with (
+        patch("wrangler.server.devices.set_name", AsyncMock()),
+        patch("wrangler.server.devices.probe_device", AsyncMock(return_value=updated)),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.put(
+            "/api/devices/aa:bb:cc:dd:ee:ff/name",
+            json={"name": "Stage-Left"},
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "Stage-Left"
+    assert registry_with_one.get("aa:bb:cc:dd:ee:ff").name == "Stage-Left"
+
+
+def test_put_name_404_unknown_mac(app_with_registry) -> None:
+    client = TestClient(app_with_registry)
+    response = client.put(
+        "/api/devices/zz:zz:zz:zz:zz:zz/name",
+        json={"name": "x"},
+    )
+    assert response.status_code == 404
+
+
+def test_put_name_502_when_wled_down(app_with_registry) -> None:
+    with patch(
+        "wrangler.server.devices.set_name",
+        AsyncMock(side_effect=WledUnreachableError("dead")),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.put(
+            "/api/devices/aa:bb:cc:dd:ee:ff/name",
+            json={"name": "x"},
+        )
+    assert response.status_code == 502
+
+
+def test_put_name_rejects_empty(app_with_registry) -> None:
+    client = TestClient(app_with_registry)
+    response = client.put(
+        "/api/devices/aa:bb:cc:dd:ee:ff/name",
+        json={"name": ""},
+    )
+    assert response.status_code == 422
