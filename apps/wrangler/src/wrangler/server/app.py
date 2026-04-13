@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from wrangler.scanner import ScanOptions, scan
 from wrangler.server.devices import build_devices_router
+from wrangler.server.metadata import build_metadata_router
 from wrangler.server.registry import Registry
 
 
@@ -43,6 +44,7 @@ def create_app(
         return {"ok": True}
 
     app.include_router(build_devices_router(reg))
+    app.include_router(build_metadata_router())
 
     if initial_scan:
 
