@@ -83,3 +83,54 @@ async def test_registry_put_replaces_single_device() -> None:
     await r.scan(ScanOptions(mdns_timeout=0.01))  # empty result
     r.put(_dev("aa:bb:cc:dd:ee:01", "10.0.6.1", "A-renamed"))
     assert r.get("aa:bb:cc:dd:ee:01").name == "A-renamed"
+
+
+@pytest.mark.asyncio
+async def test_registry_notifies_observers_on_scan() -> None:
+    fake_scan = AsyncMock(return_value=[_dev("aa:bb:cc:dd:ee:01", "10.0.6.1", "A")])
+    r = Registry(scanner=fake_scan)
+
+    events: list[str] = []
+
+    async def observer() -> None:
+        events.append("notified")
+
+    r.on_changed(observer)
+    await r.scan(ScanOptions(mdns_timeout=0.01))
+    assert events == ["notified"]
+
+
+@pytest.mark.asyncio
+async def test_registry_notifies_observers_on_put() -> None:
+    r = Registry(scanner=AsyncMock())
+
+    events: list[str] = []
+
+    async def observer() -> None:
+        events.append("put")
+
+    r.on_changed(observer)
+    r.put(_dev("aa:bb:cc:dd:ee:01", "10.0.6.1", "A"))
+    # put schedules via create_task; let the loop drain.
+    await asyncio.sleep(0)
+    assert events == ["put"]
+
+
+@pytest.mark.asyncio
+async def test_registry_observer_failure_isolated() -> None:
+    r = Registry(scanner=AsyncMock(return_value=[]))
+
+    calls: list[str] = []
+
+    async def bad() -> None:
+        calls.append("bad")
+        msg = "boom"
+        raise RuntimeError(msg)
+
+    async def good() -> None:
+        calls.append("good")
+
+    r.on_changed(bad)
+    r.on_changed(good)
+    await r.scan(ScanOptions(mdns_timeout=0.01))
+    assert calls == ["bad", "good"]
