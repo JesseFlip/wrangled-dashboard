@@ -18,6 +18,9 @@ echo "=== python: apps/wrangler ==="
 echo "=== node: apps/dashboard ==="
 ( cd "$ROOT/apps/dashboard" && npm install && npm run build )
 
+echo "=== node: apps/wrangler-ui ==="
+( cd "$ROOT/apps/wrangler-ui" && npm install && npm run build )
+
 echo "=== lint ==="
 "$ROOT/lint.sh"
 

@@ -11,7 +11,7 @@ fi
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PY_APPS=(packages/contracts apps/wrangler)
-JS_APPS=(apps/dashboard)
+JS_APPS=(apps/dashboard apps/wrangler-ui)
 
 failed=0
 

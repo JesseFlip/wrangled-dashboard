@@ -29,6 +29,15 @@ Runs on the Raspberry Pi. Responsible for:
     uv run wrangler send emoji 🔥             # emoji shortcut
     uv run wrangler send power off
 
+    # Web UI + REST API (serves built wrangler-ui at :8501)
+    uv run wrangler serve                     # http://localhost:8501
+    uv run wrangler serve --host 0.0.0.0 --port 8501
+    uv run wrangler serve --no-initial-scan
+
+For UI development with live reload, run the Vite dev server too:
+
+    cd ../wrangler-ui && npm run dev          # :8511 with /api/* proxied to :8501
+
 ## Test
 
     uv run pytest                    # unit tests
@@ -41,7 +50,12 @@ Runs on the Raspberry Pi. Responsible for:
 - `scanner/netinfo.py` — detects the local `/24`
 - `scanner/__init__.py` — public `scan(opts)` orchestrator
 - `pusher.py` — takes a `Command` from `wrangled_contracts`, POSTs `/json/state`
-- `cli.py` — argparse CLI (`scan` + `send` subcommands)
+- `server/app.py` — FastAPI factory (CORS, static UI mount, healthz)
+- `server/devices.py` — `/api/devices/*` + `/api/scan` routes
+- `server/metadata.py` — `/api/effects` + `/api/presets` + `/api/emoji`
+- `server/registry.py` — in-memory device map with scan lock
+- `server/wled_client.py` — WLED read + cfg HTTP helpers
+- `cli.py` — argparse CLI (`scan` + `send` + `serve` subcommands)
 
 ## Gotchas
 - Some networks block mDNS. The scanner falls back to sweep when mDNS returns zero candidates.
