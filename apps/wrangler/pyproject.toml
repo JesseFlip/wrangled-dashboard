@@ -11,6 +11,7 @@ dependencies = [
     "wrangled-contracts",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
+    "websockets>=12.0",
 ]
 
 [project.scripts]
