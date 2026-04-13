@@ -8,6 +8,7 @@ import logging
 import httpx
 from pydantic import BaseModel
 from wrangled_contracts import (
+    EFFECT_DEFAULTS,
     EFFECT_FX_ID,
     PRESETS,
     RGB,
@@ -49,16 +50,21 @@ def _build_power(cmd: PowerCommand) -> dict:
 def _build_effect(cmd: EffectCommand) -> dict:
     # m12=1 ("bar" expansion) makes 1D effects fill the full matrix height.
     # No-op for effects that are already 2D-native.
+    defaults = EFFECT_DEFAULTS.get(cmd.name, {})
+    speed = cmd.speed if cmd.speed is not None else defaults.get("speed")
+    intensity = cmd.intensity if cmd.intensity is not None else defaults.get("intensity")
+    brightness = cmd.brightness if cmd.brightness is not None else defaults.get("brightness")
+
     seg: dict = {"id": 0, "fx": EFFECT_FX_ID[cmd.name], "m12": 1}
-    if cmd.speed is not None:
-        seg["sx"] = cmd.speed
-    if cmd.intensity is not None:
-        seg["ix"] = cmd.intensity
+    if speed is not None:
+        seg["sx"] = speed
+    if intensity is not None:
+        seg["ix"] = intensity
     if cmd.color is not None:
         seg["col"] = _rgb_triplet(cmd.color)
     body: dict = {"on": True, "seg": [seg]}
-    if cmd.brightness is not None:
-        body["bri"] = cmd.brightness
+    if brightness is not None:
+        body["bri"] = brightness
     return body
 
 

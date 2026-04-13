@@ -215,6 +215,22 @@ EFFECT_FX_ID: dict[EffectName, int] = {
     "noise": 70,
 }
 
+# Per-effect default parameter overrides.
+# Applied by the pusher *only* when the EffectCommand leaves those fields as None.
+# Tuned by taste — primary goal: avoid seizure-inducing defaults at the conference.
+EFFECT_DEFAULTS: dict[EffectName, dict[str, int]] = {
+    "solid": {},
+    "breathe": {"speed": 48},
+    "rainbow": {"speed": 140},
+    "fire": {"speed": 160, "intensity": 128},
+    "sparkle": {"speed": 180, "intensity": 100, "brightness": 140},
+    "fireworks": {"speed": 200, "intensity": 180, "brightness": 140},
+    "matrix": {"speed": 10, "intensity": 128},
+    "pride": {"speed": 140},
+    "chase": {"speed": 150},
+    "noise": {"speed": 80},
+}
+
 
 def _color(r: int, g: int, b: int) -> ColorCommand:
     return ColorCommand(color=RGB(r=r, g=g, b=b))

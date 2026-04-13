@@ -59,9 +59,27 @@ def test_build_power_off() -> None:
     assert _build_power(PowerCommand(on=False)) == {"on": False}
 
 
-def test_build_effect_minimal() -> None:
+def test_build_effect_minimal_applies_defaults() -> None:
+    # "fire" defaults are speed=160, intensity=128 (no brightness default).
     body = _build_effect(EffectCommand(name="fire"))
-    assert body == {"on": True, "seg": [{"id": 0, "fx": 149, "m12": 1}]}
+    assert body == {
+        "on": True,
+        "seg": [{"id": 0, "fx": 149, "m12": 1, "sx": 160, "ix": 128}],
+    }
+
+
+def test_build_effect_matrix_defaults_to_slow_speed() -> None:
+    # Documented default: matrix speed is 10 (not epileptic).
+    body = _build_effect(EffectCommand(name="matrix"))
+    seg = body["seg"][0]
+    assert seg["fx"] == 63
+    assert seg["sx"] == 10
+    assert seg["ix"] == 128
+
+
+def test_build_effect_user_override_beats_default() -> None:
+    body = _build_effect(EffectCommand(name="matrix", speed=200))
+    assert body["seg"][0]["sx"] == 200
 
 
 def test_build_effect_full() -> None:

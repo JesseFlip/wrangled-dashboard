@@ -1,6 +1,7 @@
 """Shared pydantic models for the WrangLED monorepo."""
 
 from wrangled_contracts.commands import (
+    EFFECT_DEFAULTS,
     EFFECT_FX_ID,
     EMOJI_COMMANDS,
     PRESETS,
@@ -19,6 +20,7 @@ from wrangled_contracts.commands import (
 from wrangled_contracts.wled import WledDevice, WledMatrix
 
 __all__ = [
+    "EFFECT_DEFAULTS",
     "EFFECT_FX_ID",
     "EMOJI_COMMANDS",
     "PRESETS",
