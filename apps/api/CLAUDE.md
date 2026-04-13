@@ -1,18 +1,27 @@
-# apps/api — FastAPI Hub
+# apps/api — Central Hub (FastAPI)
 
-## Status
-**Not yet implemented.** Placeholder for milestone 1.
+## Purpose
+The central WrangLED server. Holds WebSocket connections to wranglers that dial home, exposes REST for command senders (dashboard, Discord, curl), and serves the built `apps/dashboard/` as static.
 
-## Intended purpose
-FastAPI process that:
-- Serves `apps/dashboard/dist/` as static files on `/`.
-- Exposes REST under `/api/*`.
-- Exposes a WebSocket hub under `/ws` for dashboard browsers and `wrangler` agents.
-- Starts a `discord.py` gateway task if `DISCORD_BOT_TOKEN` is set.
+## Run locally
 
-## Port
-8500.
+    cd apps/api
+    uv sync
+    WRANGLED_AUTH_TOKEN=devtoken uv run api serve
 
-## Downstream
-- Consumes Commands from Discord / dashboard.
-- Pushes Commands to `wrangler` over WebSocket.
+## Test
+
+    uv run pytest
+
+## Env vars
+- `WRANGLED_AUTH_TOKEN` — pre-shared key. Required on both api and wrangler. Unset = dev mode.
+- `WRANGLED_HOST` — bind host (default 127.0.0.1)
+- `WRANGLED_PORT` — bind port (default 8500)
+
+## Key modules
+- `server/app.py` — FastAPI factory, CORS, static mount
+- `server/auth.py` — bearer-token dependency
+- `server/hub.py` — WranglerConnection manager + command routing
+- `server/ws.py` — `/ws` endpoint
+- `server/rest.py` — `/api/*` endpoints
+- `cli.py` — argparse CLI (`serve`)

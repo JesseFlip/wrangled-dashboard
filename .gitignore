@@ -40,3 +40,6 @@ uv.lock
 
 # Built Vite UI, served by wrangler's FastAPI
 apps/wrangler/static/wrangler-ui/
+
+# Built dashboard, served by apps/api
+apps/api/static/dashboard/
