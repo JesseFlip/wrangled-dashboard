@@ -14,6 +14,9 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+echo "starting api FastAPI on :8500"
+( cd "$ROOT/apps/api" && uv run api serve --host 127.0.0.1 --port 8500 ) &
+
 echo "starting wrangler FastAPI on :8501"
 ( cd "$ROOT/apps/wrangler" && uv run wrangler serve --host 127.0.0.1 --port 8501 ) &
 
@@ -24,6 +27,7 @@ echo "starting dashboard Vite"
 ( cd "$ROOT/apps/dashboard" && npm run dev ) &
 
 echo ""
+echo "  api:          http://localhost:8500/healthz"
 echo "  wrangler-ui:  http://localhost:8511"
 echo "  wrangler api: http://localhost:8501/healthz"
 echo "  dashboard:    (see dashboard Vite output for URL)"

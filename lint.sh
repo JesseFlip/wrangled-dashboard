@@ -10,7 +10,7 @@ if [[ "${1:-}" == "--fix" ]]; then
 fi
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-PY_APPS=(packages/contracts apps/wrangler)
+PY_APPS=(packages/contracts apps/wrangler apps/api)
 JS_APPS=(apps/dashboard apps/wrangler-ui)
 
 failed=0

@@ -2,7 +2,7 @@
 
 ## Layout
 - `apps/dashboard/` — Vite/React "Command Center" UI. Built static assets served by `apps/api/` in prod; deployed standalone to GitHub Pages for the public build log.
-- `apps/api/` — FastAPI hub. Serves dashboard static, REST, WebSocket hub, optional Discord gateway.
+- `apps/api/` — FastAPI central hub. Holds outbound WS connections from wranglers (dial-home), exposes REST for command senders, serves built dashboard static. Pre-shared key auth via `WRANGLED_AUTH_TOKEN` (unset = dev mode).
 - `apps/wrangler-ui/` — Vite/React local config panel. Built static assets served by `apps/wrangler/`.
 - `apps/wrangler/` — FastAPI + agent running on the Raspberry Pi. Scans for WLEDs, holds WS to api, pushes to WLEDs.
 - `packages/contracts/` — Shared pydantic v2 models imported by every Python app.

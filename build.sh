@@ -15,6 +15,9 @@ echo "=== python: packages/contracts ==="
 echo "=== python: apps/wrangler ==="
 ( cd "$ROOT/apps/wrangler" && uv sync )
 
+echo "=== python: apps/api ==="
+( cd "$ROOT/apps/api" && uv sync )
+
 echo "=== node: apps/dashboard ==="
 ( cd "$ROOT/apps/dashboard" && npm install && npm run build )
 
@@ -29,5 +32,8 @@ echo "=== tests: packages/contracts ==="
 
 echo "=== tests: apps/wrangler ==="
 ( cd "$ROOT/apps/wrangler" && uv run pytest -v )
+
+echo "=== tests: apps/api ==="
+( cd "$ROOT/apps/api" && uv run pytest -v )
 
 echo "build ok"

@@ -34,6 +34,17 @@ Runs on the Raspberry Pi. Responsible for:
     uv run wrangler serve --host 0.0.0.0 --port 8501
     uv run wrangler serve --no-initial-scan
 
+### Dial home to the central api
+
+Set these env vars so `wrangler serve` opens an outbound WS to `apps/api`:
+
+    export WRANGLED_API_URL=ws://localhost:8500/ws
+    export WRANGLED_AUTH_TOKEN=devtoken
+    export WRANGLED_WRANGLER_ID=pi-venue    # optional; defaults to hostname
+
+Without `WRANGLED_API_URL`, the hub client is inactive — wrangler runs
+exactly as before.
+
 For UI development with live reload, run the Vite dev server too:
 
     cd ../wrangler-ui && npm run dev          # :8511 with /api/* proxied to :8501
