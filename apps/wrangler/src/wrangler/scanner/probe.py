@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime  # noqa: TC003
+from datetime import UTC, datetime
 from ipaddress import IPv4Address  # noqa: TC003
 from typing import Literal
 
 import httpx
 from pydantic import ValidationError
-
 from wrangled_contracts import WledDevice, WledMatrix
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ async def probe_device(
     ip: IPv4Address,
     *,
     source: Literal["mdns", "sweep"],
-    timeout: float = 2.0,
+    timeout: float = 2.0,  # noqa: ASYNC109
 ) -> WledDevice | None:
     """Probe a single IP. Return a WledDevice or None if not a responsive WLED."""
     url = f"http://{ip}/json/info"
