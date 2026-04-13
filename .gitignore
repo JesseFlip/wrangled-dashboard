@@ -43,3 +43,6 @@ apps/wrangler/static/wrangler-ui/
 
 # Built dashboard, served by apps/api
 apps/api/static/dashboard/
+
+# Claude Code local state (per-user tooling — not project state)
+.claude/
