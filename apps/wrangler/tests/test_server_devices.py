@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from ipaddress import IPv4Address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,6 +12,7 @@ from wrangled_contracts import WledDevice
 
 from wrangler.server import create_app
 from wrangler.server.registry import Registry
+from wrangler.server.wled_client import WledUnreachableError
 
 
 def _dev(mac: str = "aa:bb:cc:dd:ee:ff", ip: str = "10.0.6.207") -> WledDevice:
@@ -77,3 +78,34 @@ def test_post_scan_invokes_registry_scan() -> None:
     assert len(data["devices"]) == 1
     assert data["devices"][0]["mac"] == "11:22:33:44:55:66"
     scanner.assert_awaited_once()
+
+
+# --- Task 5: state ---
+
+
+def test_get_state_returns_live_body(app_with_registry) -> None:
+    payload = {"on": True, "bri": 80, "seg": [{"fx": 149}]}
+    with patch(
+        "wrangler.server.devices.fetch_state",
+        AsyncMock(return_value=payload),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.get("/api/devices/aa:bb:cc:dd:ee:ff/state")
+    assert response.status_code == 200
+    assert response.json() == payload
+
+
+def test_get_state_returns_502_when_wled_down(app_with_registry) -> None:
+    with patch(
+        "wrangler.server.devices.fetch_state",
+        AsyncMock(side_effect=WledUnreachableError("dead")),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.get("/api/devices/aa:bb:cc:dd:ee:ff/state")
+    assert response.status_code == 502
+
+
+def test_get_state_404_for_unknown_mac(app_with_registry) -> None:
+    client = TestClient(app_with_registry)
+    response = client.get("/api/devices/zz:zz:zz:zz:zz:zz/state")
+    assert response.status_code == 404
