@@ -10,8 +10,7 @@ from ipaddress import IPv4Address
 
 import httpx
 import pytest
-
-from wrangled_contracts import ColorCommand, RGB
+from wrangled_contracts import RGB, ColorCommand
 
 from wrangler.pusher import push_command
 from wrangler.scanner import ScanOptions, scan
