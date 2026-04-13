@@ -28,10 +28,11 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
     from typing import Any
 
+    from wrangler.server.registry import Registry
+
 from wrangler import __version__
 from wrangler.pusher import push_command
 from wrangler.scanner import ScanOptions
-from wrangler.server.registry import Registry  # noqa: TC001
 from wrangler.server.wled_client import WledUnreachableError, fetch_state
 
 logger = logging.getLogger(__name__)

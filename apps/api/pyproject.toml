@@ -23,6 +23,7 @@ packages = ["src/api"]
 
 [tool.uv.sources]
 wrangled-contracts = { path = "../../packages/contracts", editable = true }
+wrangler = { path = "../wrangler", editable = true }
 
 [tool.ruff]
 extend = "../../ruff.toml"
@@ -37,4 +38,5 @@ dev = [
     "httpx>=0.27",
     "respx>=0.21",
     "ruff>=0.5",
+    "wrangler",
 ]
