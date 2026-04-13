@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import httpx
 from fastapi import APIRouter, HTTPException
-from wrangled_contracts import WledDevice  # noqa: TC002
+from wrangled_contracts import Command, WledDevice  # noqa: TC002
 
+from wrangler.pusher import PushResult, push_command
 from wrangler.scanner import ScanOptions
 from wrangler.server.registry import Registry  # noqa: TC001
 from wrangler.server.wled_client import WledUnreachableError, fetch_state
@@ -40,5 +41,13 @@ def build_devices_router(registry: Registry) -> APIRouter:
                 return await fetch_state(client, device)
             except WledUnreachableError as exc:
                 raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    @router.post("/devices/{mac}/commands")
+    async def post_command(mac: str, command: Command) -> PushResult:
+        device = registry.get(mac)
+        if device is None:
+            raise HTTPException(status_code=404, detail=f"unknown device: {mac}")
+        async with httpx.AsyncClient() as client:
+            return await push_command(client, device, command)
 
     return router

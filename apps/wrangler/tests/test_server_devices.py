@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from wrangled_contracts import WledDevice
 
+from wrangler.pusher import PushResult
 from wrangler.server import create_app
 from wrangler.server.registry import Registry
 from wrangler.server.wled_client import WledUnreachableError
@@ -109,3 +110,54 @@ def test_get_state_404_for_unknown_mac(app_with_registry) -> None:
     client = TestClient(app_with_registry)
     response = client.get("/api/devices/zz:zz:zz:zz:zz:zz/state")
     assert response.status_code == 404
+
+
+# --- Task 6: commands ---
+
+
+def test_post_command_color_ok(app_with_registry) -> None:
+    with patch(
+        "wrangler.server.devices.push_command",
+        AsyncMock(return_value=PushResult(ok=True, status=200)),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.post(
+            "/api/devices/aa:bb:cc:dd:ee:ff/commands",
+            json={"kind": "color", "color": {"r": 255, "g": 0, "b": 0}},
+        )
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "status": 200, "error": None}
+
+
+def test_post_command_422_on_invalid_body(app_with_registry) -> None:
+    client = TestClient(app_with_registry)
+    response = client.post(
+        "/api/devices/aa:bb:cc:dd:ee:ff/commands",
+        json={"kind": "color"},  # missing color
+    )
+    assert response.status_code == 422
+
+
+def test_post_command_404_unknown_mac(app_with_registry) -> None:
+    client = TestClient(app_with_registry)
+    response = client.post(
+        "/api/devices/zz:zz:zz:zz:zz:zz/commands",
+        json={"kind": "power", "on": False},
+    )
+    assert response.status_code == 404
+
+
+def test_post_command_reports_push_failure(app_with_registry) -> None:
+    with patch(
+        "wrangler.server.devices.push_command",
+        AsyncMock(return_value=PushResult(ok=False, status=500, error="boom")),
+    ):
+        client = TestClient(app_with_registry)
+        response = client.post(
+            "/api/devices/aa:bb:cc:dd:ee:ff/commands",
+            json={"kind": "power", "on": True},
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ok"] is False
+    assert body["status"] == 500
