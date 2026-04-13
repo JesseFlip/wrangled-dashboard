@@ -9,6 +9,8 @@ dependencies = [
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
     "wrangled-contracts",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.scripts]
