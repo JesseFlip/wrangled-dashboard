@@ -206,7 +206,7 @@ EFFECT_FX_ID: dict[EffectName, int] = {
     "solid": 0,
     "breathe": 2,
     "rainbow": 9,
-    "fire": 66,
+    "fire": 149,       # Firenoise (2D-native); fx 66 "Fire 2012" is 1D-only
     "sparkle": 20,
     "fireworks": 42,
     "matrix": 63,

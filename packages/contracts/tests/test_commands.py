@@ -191,7 +191,7 @@ def test_effect_fx_id_covers_all_effect_names() -> None:
 
 def test_effect_fx_id_values_are_wled_ids() -> None:
     assert EFFECT_FX_ID["solid"] == 0
-    assert EFFECT_FX_ID["fire"] == 66
+    assert EFFECT_FX_ID["fire"] == 149
     assert EFFECT_FX_ID["matrix"] == 63
 
 

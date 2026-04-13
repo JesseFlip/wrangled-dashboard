@@ -35,7 +35,7 @@ def test_build_color_includes_brightness_when_set() -> None:
     assert body == {
         "on": True,
         "bri": 100,
-        "seg": [{"fx": 0, "col": [[10, 20, 30], [0, 0, 0], [0, 0, 0]]}],
+        "seg": [{"id": 0, "fx": 0, "col": [[10, 20, 30], [0, 0, 0], [0, 0, 0]]}],
     }
 
 
@@ -61,7 +61,7 @@ def test_build_power_off() -> None:
 
 def test_build_effect_minimal() -> None:
     body = _build_effect(EffectCommand(name="fire"))
-    assert body == {"on": True, "seg": [{"fx": 66}]}
+    assert body == {"on": True, "seg": [{"id": 0, "fx": 149, "m12": 1}]}
 
 
 def test_build_effect_full() -> None:

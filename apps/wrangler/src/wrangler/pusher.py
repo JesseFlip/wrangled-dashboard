@@ -31,7 +31,7 @@ def _rgb_triplet(color: RGB) -> list[list[int]]:
 def _build_color(cmd: ColorCommand) -> dict:
     body: dict = {
         "on": True,
-        "seg": [{"fx": 0, "col": _rgb_triplet(cmd.color)}],
+        "seg": [{"id": 0, "fx": 0, "col": _rgb_triplet(cmd.color)}],
     }
     if cmd.brightness is not None:
         body["bri"] = cmd.brightness
@@ -47,7 +47,9 @@ def _build_power(cmd: PowerCommand) -> dict:
 
 
 def _build_effect(cmd: EffectCommand) -> dict:
-    seg: dict = {"fx": EFFECT_FX_ID[cmd.name]}
+    # m12=1 ("bar" expansion) makes 1D effects fill the full matrix height.
+    # No-op for effects that are already 2D-native.
+    seg: dict = {"id": 0, "fx": EFFECT_FX_ID[cmd.name], "m12": 1}
     if cmd.speed is not None:
         seg["sx"] = cmd.speed
     if cmd.intensity is not None:
@@ -62,6 +64,7 @@ def _build_effect(cmd: EffectCommand) -> dict:
 
 def _build_text(cmd: TextCommand) -> dict:
     seg: dict = {
+        "id": 0,
         "fx": 122,
         "n": cmd.text,
         "sx": cmd.speed,
