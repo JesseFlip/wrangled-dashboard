@@ -9,6 +9,7 @@ import httpx
 from pydantic import BaseModel
 from wrangled_contracts import (
     EFFECT_FX_ID,
+    PRESETS,
     RGB,
     BrightnessCommand,
     ColorCommand,
@@ -75,6 +76,29 @@ def _build_text(cmd: TextCommand) -> dict:
     return body
 
 
+def _build_command_body(command: Command) -> dict:
+    """Build a single WLED body for any non-preset Command."""
+    match command:
+        case ColorCommand():
+            return _build_color(command)
+        case BrightnessCommand():
+            return _build_brightness(command)
+        case EffectCommand():
+            return _build_effect(command)
+        case TextCommand():
+            return _build_text(command)
+        case PowerCommand():
+            return _build_power(command)
+        case PresetCommand():
+            msg = "cannot build a single body from a PresetCommand"
+            raise ValueError(msg)
+
+
+def _build_preset_bodies(cmd: PresetCommand) -> list[dict]:
+    """Expand a PresetCommand into a list of WLED bodies."""
+    return [_build_command_body(sub) for sub in PRESETS[cmd.name]]
+
+
 class PushResult(BaseModel):
     """Outcome of a push_command call."""
 
@@ -118,17 +142,14 @@ async def push_command(
     timeout: float = 2.0,  # noqa: ASYNC109
 ) -> PushResult:
     """Send a Command to a WLED device. Never raises."""
-    match command:
-        case ColorCommand():
-            body = _build_color(command)
-        case BrightnessCommand():
-            body = _build_brightness(command)
-        case EffectCommand():
-            body = _build_effect(command)
-        case TextCommand():
-            body = _build_text(command)
-        case PowerCommand():
-            body = _build_power(command)
-        case PresetCommand():
-            return PushResult(ok=False, error="PresetCommand not yet supported")
-    return await _post_one(client, device, body, timeout=timeout)
+    if isinstance(command, PresetCommand):
+        bodies = _build_preset_bodies(command)
+    else:
+        bodies = [_build_command_body(command)]
+
+    last: PushResult = PushResult(ok=True, status=200)
+    for body in bodies:
+        last = await _post_one(client, device, body, timeout=timeout)
+        if not last.ok:
+            return last
+    return last

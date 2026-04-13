@@ -14,6 +14,7 @@ from wrangled_contracts import (
     ColorCommand,
     EffectCommand,
     PowerCommand,
+    PresetCommand,
     TextCommand,
     WledDevice,
 )
@@ -219,3 +220,43 @@ async def test_push_returns_error_on_non_200() -> None:
         )
     assert result.ok is False
     assert result.status == 500
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_push_preset_pytexas_posts_twice() -> None:
+    route = respx.post("http://10.0.6.207/json/state").mock(
+        return_value=httpx.Response(200, json={"success": True}),
+    )
+    async with httpx.AsyncClient() as client:
+        result = await push_command(client, _fake_device(), PresetCommand(name="pytexas"))
+    assert result.ok is True
+    assert route.call_count == 2
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_push_preset_party_posts_once() -> None:
+    route = respx.post("http://10.0.6.207/json/state").mock(
+        return_value=httpx.Response(200, json={"success": True}),
+    )
+    async with httpx.AsyncClient() as client:
+        result = await push_command(client, _fake_device(), PresetCommand(name="party"))
+    assert result.ok is True
+    assert route.call_count == 1
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_push_preset_stops_on_first_failure() -> None:
+    route = respx.post("http://10.0.6.207/json/state").mock(
+        side_effect=[
+            httpx.Response(200, json={"success": True}),
+            httpx.Response(500, text="boom"),
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        result = await push_command(client, _fake_device(), PresetCommand(name="pytexas"))
+    assert result.ok is False
+    assert result.status == 500
+    assert route.call_count == 2
