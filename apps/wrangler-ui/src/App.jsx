@@ -2,16 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import DeviceSelector from './components/DeviceSelector.jsx';
 import LiveState from './components/LiveState.jsx';
 import ColorTab from './components/ColorTab.jsx';
-import PowerTab from './components/PowerTab.jsx';
-import BrightnessSlider from './components/BrightnessSlider.jsx';
 import EffectTab from './components/EffectTab.jsx';
 import TextTab from './components/TextTab.jsx';
 import PresetTab from './components/PresetTab.jsx';
 import EmojiTab from './components/EmojiTab.jsx';
+import BrightnessSlider from './components/BrightnessSlider.jsx';
 import { api } from './api.js';
 
 const STORAGE_KEY = 'wrangler.selectedMac';
-const TABS = ['Color', 'Effect', 'Text', 'Preset', 'Emoji', 'Power'];
+const TABS = ['Color', 'Effect', 'Text', 'Preset', 'Emoji'];
 
 export default function App() {
   const [devices, setDevices] = useState([]);
@@ -52,7 +51,7 @@ export default function App() {
   };
 
   return (
-    <div>
+    <div className="app-shell">
       <DeviceSelector
         devices={devices}
         selectedMac={selectedMac}
@@ -60,23 +59,49 @@ export default function App() {
         onRescan={handleRescan}
         onRenamed={refreshDevices}
       />
-      {error && <div style={{ padding: '0.5rem 1rem', background: '#3a1212', color: '#ffd6d6' }}>{error}</div>}
-      {selectedMac && <LiveState selectedMac={selectedMac} />}
-      <nav style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.25rem', borderBottom: '1px solid var(--border)' }}>
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            style={{ padding: '0.4rem 1rem', background: t === tab ? 'var(--accent)' : 'var(--panel)', color: t === tab ? '#000' : 'var(--fg)', border: '1px solid var(--border)' }}>
-            {t}
-          </button>
-        ))}
-      </nav>
-      {tab === 'Color' && <ColorTab onSend={sendCommand} />}
-      {tab === 'Effect' && <EffectTab onSend={sendCommand} />}
-      {tab === 'Text' && <TextTab onSend={sendCommand} />}
-      {tab === 'Preset' && <PresetTab onSend={sendCommand} />}
-      {tab === 'Emoji' && <EmojiTab onSend={sendCommand} />}
-      {tab === 'Power' && <PowerTab onSend={sendCommand} />}
-      {selectedMac && <BrightnessSlider onCommit={sendBrightness} />}
+      {error && <div className="banner-error">{error}</div>}
+      <div className="app-body">
+        <aside className="status-rail">
+          <div className="card">
+            <div className="card-header"><span>Live state</span></div>
+            {selectedMac
+              ? <LiveState selectedMac={selectedMac} />
+              : <div className="live-empty">No device selected.</div>}
+          </div>
+          <div className="card">
+            <div className="card-header"><span>Brightness</span></div>
+            {selectedMac && <BrightnessSlider onCommit={sendBrightness} />}
+          </div>
+          <div className="card">
+            <div className="card-header"><span>Power</span></div>
+            <div className="power-group">
+              <button className="btn btn-success" onClick={() => sendCommand({ kind: 'power', on: true })}>On</button>
+              <button className="btn btn-danger" onClick={() => sendCommand({ kind: 'power', on: false })}>Off</button>
+            </div>
+          </div>
+        </aside>
+        <main className="control-surface">
+          <nav className="tabs">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                className={t === tab ? 'tab active' : 'tab'}
+                onClick={() => setTab(t)}
+              >{t}</button>
+            ))}
+          </nav>
+          <div className="tab-panel">
+            {tab === 'Color' && <ColorTab onSend={sendCommand} />}
+            {tab === 'Effect' && <EffectTab onSend={sendCommand} />}
+            {tab === 'Text' && <TextTab onSend={sendCommand} />}
+            {tab === 'Preset' && <PresetTab onSend={sendCommand} />}
+            {tab === 'Emoji' && <EmojiTab onSend={sendCommand} />}
+          </div>
+        </main>
+      </div>
+      {!devices.length && (
+        <p className="empty-state">No devices found. Click Rescan to search the LAN.</p>
+      )}
     </div>
   );
 }

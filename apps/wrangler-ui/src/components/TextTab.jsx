@@ -20,17 +20,20 @@ export default function TextTab({ onSend }) {
   };
 
   return (
-    <div style={{ padding: '1rem', display: 'grid', gap: '0.75rem', maxWidth: '32rem' }}>
-      <label>Text ({text.length}/64):
-        <input maxLength={64} value={text} onChange={(e) => setText(e.target.value)} style={{ width: '100%' }} />
-      </label>
-      <label>Color:
-        <input value={color} onChange={(e) => setColor(e.target.value)} />
-      </label>
-      <label>Speed ({speed}):
-        <input type="range" min={32} max={240} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} style={{ width: '100%' }} />
-      </label>
-      <button onClick={send} style={{ padding: '0.6rem 1rem' }}>Send text</button>
+    <div className="stack">
+      <div>
+        <label className="field-label">Text ({text.length}/64)</label>
+        <textarea maxLength={64} value={text} onChange={(e) => setText(e.target.value)} className="textarea" rows={2} />
+      </div>
+      <div>
+        <label className="field-label">Color</label>
+        <input className="input" value={color} onChange={(e) => setColor(e.target.value)} />
+      </div>
+      <div className="slider-group">
+        <div className="slider-header"><span>Speed</span><span>{speed}</span></div>
+        <input type="range" min={32} max={240} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="slider" />
+      </div>
+      <button className="btn btn-primary" onClick={send}>Send text</button>
     </div>
   );
 }

@@ -26,23 +26,26 @@ export default function EffectTab({ onSend }) {
   };
 
   return (
-    <div style={{ padding: '1rem', display: 'grid', gap: '0.75rem', maxWidth: '32rem' }}>
-      <label>
-        Effect:{' '}
-        <select value={name} onChange={(e) => setName(e.target.value)} style={{ marginLeft: '0.5rem' }}>
+    <div className="stack">
+      <div>
+        <label className="field-label">Effect</label>
+        <select className="select" value={name} onChange={(e) => setName(e.target.value)}>
           {effects.map((e) => (<option key={e} value={e}>{e}</option>))}
         </select>
-      </label>
-      <label>Speed ({speed}):
-        <input type="range" min={0} max={255} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} style={{ width: '100%' }} />
-      </label>
-      <label>Intensity ({intensity}):
-        <input type="range" min={0} max={255} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} style={{ width: '100%' }} />
-      </label>
-      <label>Color (#hex, optional):
-        <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="#ff7a00" />
-      </label>
-      <button onClick={send} style={{ padding: '0.6rem 1rem' }}>Fire effect 🔥</button>
+      </div>
+      <div className="slider-group">
+        <div className="slider-header"><span>Speed</span><span>{speed}</span></div>
+        <input type="range" min={0} max={255} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="slider" />
+      </div>
+      <div className="slider-group">
+        <div className="slider-header"><span>Intensity</span><span>{intensity}</span></div>
+        <input type="range" min={0} max={255} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} className="slider" />
+      </div>
+      <div>
+        <label className="field-label">Color (optional, #hex)</label>
+        <input className="input" value={color} onChange={(e) => setColor(e.target.value)} placeholder="#ff7a00" />
+      </div>
+      <button className="btn btn-primary" onClick={send}>Fire effect 🔥</button>
     </div>
   );
 }

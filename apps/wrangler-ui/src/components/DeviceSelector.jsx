@@ -8,10 +8,7 @@ export default function DeviceSelector({ devices, selectedMac, onSelect, onResca
   const current = devices.find((d) => d.mac === selectedMac);
 
   const commitRename = async () => {
-    if (!current || !draft.trim()) {
-      setRenaming(false);
-      return;
-    }
+    if (!current || !draft.trim()) { setRenaming(false); return; }
     setBusy(true);
     try {
       await api.rename(current.mac, draft.trim());
@@ -24,47 +21,45 @@ export default function DeviceSelector({ devices, selectedMac, onSelect, onResca
 
   const rescan = async () => {
     setBusy(true);
-    try {
-      await onRescan?.();
-    } finally {
-      setBusy(false);
-    }
+    try { await onRescan?.(); } finally { setBusy(false); }
   };
 
   return (
-    <header style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border)' }}>
-      <strong style={{ fontSize: '1.2rem' }}>Wrangler</strong>
+    <header className="app-header">
+      <h1 className="app-title">
+        Wrang<span className="app-title-accent">LED</span>
+      </h1>
       <select
+        className="select"
         value={selectedMac || ''}
         onChange={(e) => onSelect(e.target.value)}
-        style={{ padding: '0.4rem', background: 'var(--panel)', color: 'var(--fg)', border: '1px solid var(--border)' }}
       >
-        {devices.map((d) => (
-          <option key={d.mac} value={d.mac}>{d.name}</option>
-        ))}
+        {devices.map((d) => (<option key={d.mac} value={d.mac}>{d.name}</option>))}
       </select>
       {current && !renaming && (
         <>
-          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+          <span className="device-info">
             {current.ip} · {current.matrix ? `${current.matrix.width}x${current.matrix.height}` : `${current.led_count} LEDs`} · v{current.version}
           </span>
-          <button onClick={() => { setDraft(current.name); setRenaming(true); }}>✏️ rename</button>
+          <button className="btn btn-ghost" onClick={() => { setDraft(current.name); setRenaming(true); }}>✏️ rename</button>
         </>
       )}
       {current && renaming && (
         <>
           <input
+            className="input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenaming(false); }}
             autoFocus
           />
-          <button disabled={busy} onClick={commitRename}>save</button>
-          <button disabled={busy} onClick={() => setRenaming(false)}>cancel</button>
+          <button className="btn btn-primary" disabled={busy} onClick={commitRename}>save</button>
+          <button className="btn btn-ghost" disabled={busy} onClick={() => setRenaming(false)}>cancel</button>
         </>
       )}
-      <span style={{ flex: 1 }} />
-      <button disabled={busy} onClick={rescan}>{busy ? 'Scanning…' : 'Rescan 🔄'}</button>
+      <button className="btn btn-rescan" disabled={busy} onClick={rescan}>
+        {busy ? 'Scanning…' : 'Rescan 🔄'}
+      </button>
     </header>
   );
 }

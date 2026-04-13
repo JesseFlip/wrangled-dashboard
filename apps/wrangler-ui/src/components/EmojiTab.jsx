@@ -23,16 +23,14 @@ export default function EmojiTab({ onSend }) {
   useEffect(() => { api.listEmoji().then((d) => setLabels(d.emoji)).catch(() => {}); }, []);
   const glyphs = Object.keys(labels);
   return (
-    <div style={{ padding: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <div className="emoji-grid">
       {glyphs.map((g) => {
         const cmd = resolveEmojiCommand(g);
         if (!cmd) return null;
         return (
-          <button key={g} onClick={() => onSend(cmd)}
-            style={{ padding: '0.6rem 1rem', fontSize: '1.1rem' }}
-            title={labels[g]}>
-            <span style={{ fontSize: '1.4rem' }}>{g}</span>{' '}
-            <small style={{ color: 'var(--muted)' }}>{labels[g]}</small>
+          <button key={g} className="emoji-chip" onClick={() => onSend(cmd)} title={labels[g]}>
+            <span className="emoji-glyph">{g}</span>
+            <span className="emoji-label">{labels[g]}</span>
           </button>
         );
       })}

@@ -7,12 +7,6 @@ const NAMED = [
   ['black', [0, 0, 0]],
 ];
 
-const EMOJI_COLORS = [
-  ['🔴', [255, 0, 0]], ['🟢', [0, 200, 0]], ['🔵', [0, 0, 255]],
-  ['🟠', [255, 100, 0]], ['🟡', [255, 220, 0]], ['🟣', [180, 0, 255]],
-  ['⚪', [255, 255, 255]], ['⚫', [0, 0, 0]],
-];
-
 function parseHex(h) {
   const s = h.replace('#', '');
   if (s.length === 3) return [0, 1, 2].map((i) => parseInt(s[i] + s[i], 16));
@@ -23,9 +17,7 @@ function parseHex(h) {
 export default function ColorTab({ onSend }) {
   const [hex, setHex] = useState('#ff7a00');
 
-  const sendRgb = ([r, g, b]) => {
-    onSend({ kind: 'color', color: { r, g, b } });
-  };
+  const sendRgb = ([r, g, b]) => onSend({ kind: 'color', color: { r, g, b } });
 
   const sendHex = () => {
     const rgb = parseHex(hex);
@@ -33,25 +25,26 @@ export default function ColorTab({ onSend }) {
   };
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+    <div className="stack">
+      <div className="color-grid">
         {NAMED.map(([name, rgb]) => (
-          <button key={name} onClick={() => sendRgb(rgb)}
-            style={{ padding: '0.5rem 1rem', background: `rgb(${rgb.join(',')})`, color: '#000', border: '1px solid var(--border)' }}>
-            {name}
+          <button
+            key={name}
+            type="button"
+            className="color-chip"
+            style={{ background: `rgb(${rgb.join(',')})` }}
+            onClick={() => sendRgb(rgb)}
+            title={name}
+          >
+            <span className="color-chip-label">{name}</span>
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
-        <label>Hex</label>
-        <input value={hex} onChange={(e) => setHex(e.target.value)} style={{ padding: '0.4rem' }} />
-        <span style={{ display: 'inline-block', width: '2rem', height: '1.5rem', background: hex, border: '1px solid var(--border)' }} />
-        <button onClick={sendHex}>send</button>
-      </div>
-      <div style={{ display: 'flex', gap: '0.25rem' }}>
-        {EMOJI_COLORS.map(([e, rgb]) => (
-          <button key={e} onClick={() => sendRgb(rgb)} style={{ fontSize: '1.5rem' }}>{e}</button>
-        ))}
+      <div className="color-hex-row">
+        <label className="field-label" htmlFor="hex">Hex</label>
+        <input id="hex" className="input" value={hex} onChange={(e) => setHex(e.target.value)} />
+        <span className="color-hex-preview" style={{ background: hex }} />
+        <button className="btn btn-primary" onClick={sendHex}>Send</button>
       </div>
     </div>
   );
