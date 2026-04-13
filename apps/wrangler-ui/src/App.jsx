@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import DeviceSelector from './components/DeviceSelector.jsx';
+import LiveState from './components/LiveState.jsx';
 import { api } from './api.js';
 
 const STORAGE_KEY = 'wrangler.selectedMac';
@@ -55,6 +56,7 @@ export default function App() {
           {error}
         </div>
       )}
+      {selectedMac && <LiveState selectedMac={selectedMac} />}
       {!devices.length && (
         <p style={{ padding: '1rem', color: 'var(--muted)' }}>
           No devices found. Click Rescan to search the LAN.
