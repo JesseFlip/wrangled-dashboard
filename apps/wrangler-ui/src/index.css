@@ -1,0 +1,12 @@
+:root {
+  --bg: #0f1220;
+  --fg: #e9eef7;
+  --accent: #ff7a00;
+  --muted: #6a7488;
+  --panel: #1a1f33;
+  --border: #2a3150;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); }
+button { cursor: pointer; }

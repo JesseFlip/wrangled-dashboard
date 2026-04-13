@@ -37,3 +37,6 @@ htmlcov/
 
 # uv
 uv.lock
+
+# Built Vite UI, served by wrangler's FastAPI
+apps/wrangler/static/wrangler-ui/
