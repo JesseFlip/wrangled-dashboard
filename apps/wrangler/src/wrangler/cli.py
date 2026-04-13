@@ -10,6 +10,7 @@ from collections.abc import Sequence  # noqa: TC003
 from ipaddress import IPv4Address, IPv4Network
 
 import httpx
+import uvicorn
 from wrangled_contracts import (
     EFFECT_FX_ID,
     RGB,
@@ -27,6 +28,7 @@ from wrangled_contracts import (
 from wrangler.pusher import PushResult, push_command
 from wrangler.scanner import ScanOptions, scan
 from wrangler.scanner.probe import probe_device
+from wrangler.server import create_app
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -122,6 +124,16 @@ def _build_parser() -> argparse.ArgumentParser:
 
     emoji_p = send_sub.add_parser("emoji", help="Resolve a single emoji to a command.")
     emoji_p.add_argument("glyph")
+
+    serve_parser = sub.add_parser("serve", help="Run the wrangler HTTP server.")
+    serve_parser.add_argument("--host", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8501)
+    serve_parser.add_argument(
+        "--no-initial-scan",
+        dest="initial_scan",
+        action="store_false",
+        help="Skip the startup scan.",
+    )
 
     return parser
 
@@ -238,6 +250,13 @@ def _command_from_send_args(args: argparse.Namespace) -> Command:  # noqa: PLR09
     raise ValueError(msg)
 
 
+def _run_serve(args: argparse.Namespace) -> int:
+    """Start the FastAPI server under uvicorn (blocking)."""
+    app = create_app(initial_scan=args.initial_scan)
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    return 0
+
+
 async def _run_send(args: argparse.Namespace) -> int:
     try:
         device = await _resolve_device(ip=args.ip, name=args.name)
@@ -266,6 +285,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return asyncio.run(_run_scan(_opts_from_args(args), as_json=args.as_json))
     if args.command == "send":
         return asyncio.run(_run_send(args))
+    if args.command == "serve":
+        return _run_serve(args)
     return 1
 
 
