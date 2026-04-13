@@ -8,6 +8,9 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from wrangled_contracts import (
+    EFFECT_FX_ID,
+    EMOJI_COMMANDS,
+    PRESETS,
     RGB,
     BrightnessCommand,
     ColorCommand,
@@ -16,6 +19,7 @@ from wrangled_contracts import (
     PowerCommand,
     PresetCommand,
     TextCommand,
+    command_from_emoji,
 )
 
 _COMMAND_ADAPTER = TypeAdapter(Command)
@@ -167,3 +171,90 @@ def test_effect_name_is_constrained() -> None:
 def test_preset_name_is_constrained() -> None:
     with pytest.raises(ValidationError):
         PresetCommand.model_validate({"kind": "preset", "name": "nope"})
+
+
+def test_effect_fx_id_covers_all_effect_names() -> None:
+    expected = {
+        "solid",
+        "breathe",
+        "rainbow",
+        "fire",
+        "sparkle",
+        "fireworks",
+        "matrix",
+        "pride",
+        "chase",
+        "noise",
+    }
+    assert set(EFFECT_FX_ID.keys()) == expected
+
+
+def test_effect_fx_id_values_are_wled_ids() -> None:
+    assert EFFECT_FX_ID["solid"] == 0
+    assert EFFECT_FX_ID["fire"] == 66
+    assert EFFECT_FX_ID["matrix"] == 63
+
+
+def test_emoji_commands_covers_expected_keys() -> None:
+    for key in ["🔥", "🌈", "⚡", "🎉", "🐍", "❤️", "💙", "💚", "💜", "🧡", "🖤"]:
+        assert key in EMOJI_COMMANDS
+
+
+def test_command_from_emoji_fire() -> None:
+    cmd = command_from_emoji("🔥")
+    assert isinstance(cmd, EffectCommand)
+    assert cmd.name == "fire"
+
+
+def test_command_from_emoji_color() -> None:
+    cmd = command_from_emoji("💙")
+    assert isinstance(cmd, ColorCommand)
+    assert cmd.color == RGB(r=0, g=0, b=255)
+
+
+def test_command_from_emoji_power_off() -> None:
+    cmd = command_from_emoji("🖤")
+    assert isinstance(cmd, PowerCommand)
+    assert cmd.on is False
+
+
+def test_command_from_emoji_color_square() -> None:
+    cmd = command_from_emoji("🔴")
+    assert isinstance(cmd, ColorCommand)
+    assert cmd.color == RGB(r=255, g=0, b=0)
+
+
+def test_command_from_emoji_unknown_returns_none() -> None:
+    assert command_from_emoji("🦑") is None
+
+
+def test_command_from_emoji_strips_whitespace() -> None:
+    cmd = command_from_emoji("  🔥  ")
+    assert isinstance(cmd, EffectCommand)
+    assert cmd.name == "fire"
+
+
+def test_presets_cover_expected_names() -> None:
+    assert set(PRESETS.keys()) == {"pytexas", "party", "chill"}
+
+
+def test_pytexas_preset_is_color_then_text() -> None:
+    seq = PRESETS["pytexas"]
+    assert len(seq) == 2
+    assert isinstance(seq[0], ColorCommand)
+    assert isinstance(seq[1], TextCommand)
+    assert "PyTexas" in seq[1].text
+
+
+def test_party_preset_is_rainbow() -> None:
+    seq = PRESETS["party"]
+    assert len(seq) == 1
+    assert isinstance(seq[0], EffectCommand)
+    assert seq[0].name == "rainbow"
+
+
+def test_chill_preset_is_breathe() -> None:
+    seq = PRESETS["chill"]
+    assert len(seq) == 1
+    assert isinstance(seq[0], EffectCommand)
+    assert seq[0].name == "breathe"
