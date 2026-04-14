@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from api import __version__
 from api.server.auth import AuthChecker
 from api.server.hub import Hub
-from api.server.rest import build_rest_router
+from api.server.rest import build_metadata_router, build_rest_router
 from api.server.ws import build_ws_router
 
 
@@ -36,6 +36,7 @@ def create_app(*, auth_token: str | None = None) -> FastAPI:
 
     app.include_router(build_ws_router(hub, checker))
     app.include_router(build_rest_router(hub, checker))
+    app.include_router(build_metadata_router())
 
     static_dir = Path(__file__).resolve().parents[3] / "static" / "dashboard"
     if static_dir.is_dir():

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import json as _json
 from datetime import UTC, datetime
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
@@ -16,6 +16,7 @@ from wrangled_contracts import (
     DevicesChanged,
     Hello,
     PushResult,
+    SetDeviceNameResult,
     StateSnapshot,
     WledDevice,
 )
@@ -85,7 +86,7 @@ async def test_send_command_resolves_when_result_arrives() -> None:
     )
     await asyncio.sleep(0)
 
-    payload = json.loads(sent[-1])
+    payload = _json.loads(sent[-1])
     request_id = payload["request_id"]
 
     hub.resolve_response(
@@ -133,7 +134,7 @@ async def test_get_state_resolves_when_snapshot_arrives() -> None:
     task = asyncio.create_task(hub.get_state("aa:bb:cc:dd:ee:01"))
     await asyncio.sleep(0)
 
-    payload = json.loads(sent[-1])
+    payload = _json.loads(sent[-1])
     request_id = payload["request_id"]
 
     hub.resolve_response(
@@ -173,6 +174,41 @@ async def test_apply_devices_updates_on_devices_changed() -> None:
 
     found = hub.find_device("aa:bb:cc:dd:ee:01")
     assert str(found.ip) == "10.0.6.9"
+
+
+@pytest.mark.asyncio
+async def test_send_rename_resolves_when_result_arrives() -> None:
+    hub = Hub()
+    conn = _conn("pi-a", [_dev("aa:bb:cc:dd:ee:01", "10.0.6.1")])
+    await hub.attach(conn)
+
+    sent: list[str] = []
+    conn.socket.send_text = AsyncMock(side_effect=sent.append)
+
+    task = asyncio.create_task(hub.send_rename("aa:bb:cc:dd:ee:01", "NewName"))
+    await asyncio.sleep(0)
+
+    payload = _json.loads(sent[-1])
+    request_id = payload["request_id"]
+
+    renamed_dev = _dev("aa:bb:cc:dd:ee:01", "10.0.6.1")
+    hub.resolve_response(
+        "pi-a",
+        SetDeviceNameResult(request_id=request_id, device=renamed_dev),
+    )
+    result = await task
+    assert result.mac == "aa:bb:cc:dd:ee:01"
+
+
+@pytest.mark.asyncio
+async def test_send_rename_times_out() -> None:
+    hub = Hub()
+    conn = _conn("pi-a", [_dev("aa:bb:cc:dd:ee:01", "10.0.6.1")])
+    conn.socket.send_text = AsyncMock()
+    await hub.attach(conn)
+
+    with pytest.raises(WranglerTimeoutError):
+        await hub.send_rename("aa:bb:cc:dd:ee:01", "NewName", timeout=0.05)
 
 
 def test_hello_message_used_to_build_connection() -> None:

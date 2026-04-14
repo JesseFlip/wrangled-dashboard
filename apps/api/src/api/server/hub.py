@@ -15,6 +15,8 @@ from wrangled_contracts import (
     PushResult,
     RelayCommand,
     Rescan,
+    SetDeviceName,
+    SetDeviceNameResult,
     StateSnapshot,
     WledDevice,
     WranglerMessage,
@@ -169,6 +171,29 @@ class Hub:
             msg = f"wrangler {conn.wrangler_id} did not respond within {timeout}s"
             raise WranglerTimeoutError(msg) from exc
 
+    async def send_rename(
+        self,
+        mac: str,
+        name: str,
+        *,
+        timeout: float = 5.0,  # noqa: ASYNC109
+    ) -> WledDevice:
+        owner_id = self._ownership.get(mac)
+        if owner_id is None or owner_id not in self._conns:
+            msg = f"no wrangler owns {mac}"
+            raise NoWranglerForDeviceError(msg)
+        conn = self._conns[owner_id]
+        request_id = uuid.uuid4().hex
+        future: asyncio.Future[WledDevice] = asyncio.get_event_loop().create_future()
+        conn.pending[request_id] = future
+        await _send(conn, SetDeviceName(request_id=request_id, mac=mac, name=name))
+        try:
+            return await asyncio.wait_for(future, timeout=timeout)
+        except TimeoutError as exc:
+            conn.pending.pop(request_id, None)
+            msg = f"wrangler {conn.wrangler_id} did not respond within {timeout}s"
+            raise WranglerTimeoutError(msg) from exc
+
     async def rescan_all(self, *, grace: float = 2.0) -> list[WledDevice]:
         if not self._conns:
             return []
@@ -199,4 +224,14 @@ class Hub:
                 else:
                     fut.set_exception(
                         RuntimeError(message.error or "wrangler reported unreachable"),
+                    )
+        elif isinstance(message, SetDeviceNameResult):
+            fut = conn.pending.pop(message.request_id, None)
+            if fut and not fut.done():
+                if message.device is not None:
+                    self.apply_devices(conn.wrangler_id, [message.device])
+                    fut.set_result(message.device)
+                else:
+                    fut.set_exception(
+                        RuntimeError(message.error or "wrangler reported rename failure"),
                     )

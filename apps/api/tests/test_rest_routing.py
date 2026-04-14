@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from wrangled_contracts import (
     CommandResult,
     PushResult,
+    SetDeviceNameResult,
     StateSnapshot,
     WledDevice,
 )
@@ -120,6 +121,36 @@ def test_post_command_unknown_mac(app_with_one) -> None:
     response = client.post(
         "/api/devices/zz:zz:zz:zz:zz:zz/commands",
         json={"kind": "power", "on": False},
+    )
+    assert response.status_code == 404
+
+
+def test_put_name_succeeds(app_with_one) -> None:
+    hub = app_with_one.state.hub
+    conn = hub._conns["pi-a"]  # noqa: SLF001
+
+    async def fake_send(raw: str) -> None:
+        req_id = json.loads(raw)["request_id"]
+        hub.resolve_response(
+            "pi-a",
+            SetDeviceNameResult(request_id=req_id, device=_dev()),
+        )
+
+    conn.socket.send_text = AsyncMock(side_effect=fake_send)
+    client = TestClient(app_with_one)
+    response = client.put(
+        "/api/devices/aa:bb:cc:dd:ee:ff/name",
+        json={"name": "NewName"},
+    )
+    assert response.status_code == 200
+    assert response.json()["mac"] == "aa:bb:cc:dd:ee:ff"
+
+
+def test_put_name_404_unknown_mac(app_with_one) -> None:
+    client = TestClient(app_with_one)
+    response = client.put(
+        "/api/devices/zz:zz:zz:zz:zz:zz/name",
+        json={"name": "NewName"},
     )
     assert response.status_code == 404
 
