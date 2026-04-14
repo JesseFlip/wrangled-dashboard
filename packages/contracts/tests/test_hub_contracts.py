@@ -22,6 +22,8 @@ from wrangled_contracts import (
     PushResult,
     RelayCommand,
     Rescan,
+    SetDeviceName,
+    SetDeviceNameResult,
     StateSnapshot,
     Welcome,
     WledDevice,
@@ -117,6 +119,23 @@ def test_rescan_roundtrip() -> None:
 def test_ping_roundtrip() -> None:
     parsed = _API.validate_python(Ping().model_dump(mode="json"))
     assert isinstance(parsed, Ping)
+
+
+def test_set_device_name_roundtrip() -> None:
+    msg = SetDeviceName(request_id="r1", mac="aa:bb:cc:dd:ee:ff", name="NewName")
+    parsed = _API.validate_python(msg.model_dump(mode="json"))
+    assert isinstance(parsed, SetDeviceName)
+    assert parsed.request_id == "r1"
+    assert parsed.name == "NewName"
+
+
+def test_set_device_name_result_roundtrip() -> None:
+    msg = SetDeviceNameResult(request_id="r1", device=_dev())
+    parsed = _WRANGLER.validate_python(msg.model_dump(mode="json"))
+    assert isinstance(parsed, SetDeviceNameResult)
+    assert parsed.request_id == "r1"
+    assert parsed.device is not None
+    assert parsed.device.name == "WLED-Matrix"
 
 
 def test_unknown_kind_rejected() -> None:

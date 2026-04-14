@@ -58,12 +58,19 @@ class StateSnapshot(_Frozen):
     error: str | None = None
 
 
+class SetDeviceNameResult(_Frozen):
+    kind: Literal["set_device_name_result"] = "set_device_name_result"
+    request_id: str
+    device: WledDevice | None = None
+    error: str | None = None
+
+
 class Pong(_Frozen):
     kind: Literal["pong"] = "pong"
 
 
 WranglerMessage = Annotated[
-    Hello | DevicesChanged | CommandResult | StateSnapshot | Pong,
+    Hello | DevicesChanged | CommandResult | StateSnapshot | SetDeviceNameResult | Pong,
     Field(discriminator="kind"),
 ]
 
@@ -93,11 +100,18 @@ class Rescan(_Frozen):
     kind: Literal["rescan"] = "rescan"
 
 
+class SetDeviceName(_Frozen):
+    kind: Literal["set_device_name"] = "set_device_name"
+    request_id: str
+    mac: str
+    name: str = Field(min_length=1, max_length=32)
+
+
 class Ping(_Frozen):
     kind: Literal["ping"] = "ping"
 
 
 ApiMessage = Annotated[
-    Welcome | RelayCommand | GetState | Rescan | Ping,
+    Welcome | RelayCommand | GetState | Rescan | SetDeviceName | Ping,
     Field(discriminator="kind"),
 ]
