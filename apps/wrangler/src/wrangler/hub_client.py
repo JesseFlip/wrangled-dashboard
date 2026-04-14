@@ -20,6 +20,8 @@ from wrangled_contracts import (
     PushResult,
     RelayCommand,
     Rescan,
+    SetDeviceName,
+    SetDeviceNameResult,
     StateSnapshot,
     Welcome,
 )
@@ -33,7 +35,8 @@ if TYPE_CHECKING:
 from wrangler import __version__
 from wrangler.pusher import push_command
 from wrangler.scanner import ScanOptions
-from wrangler.server.wled_client import WledUnreachableError, fetch_state
+from wrangler.scanner.probe import probe_device
+from wrangler.server.wled_client import WledUnreachableError, fetch_state, set_name
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +147,8 @@ class HubClient:
         if isinstance(message, Rescan):
             self._spawn(self._handle_rescan())
             return
+        if isinstance(message, SetDeviceName):
+            self._spawn(self._handle_set_device_name(message))
 
     async def _handle_command(self, msg: RelayCommand) -> None:
         device = self._registry.get(msg.mac)
@@ -181,3 +186,33 @@ class HubClient:
 
     async def _handle_rescan(self) -> None:
         await self._registry.scan(ScanOptions(mdns_timeout=2.0))
+
+    async def _handle_set_device_name(self, msg: SetDeviceName) -> None:
+        device = self._registry.get(msg.mac)
+        if device is None:
+            result = SetDeviceNameResult(
+                request_id=msg.request_id,
+                error=f"unknown: {msg.mac}",
+            )
+        else:
+            async with httpx.AsyncClient() as client:
+                try:
+                    await set_name(client, device, msg.name)
+                    refreshed = await probe_device(
+                        client,
+                        device.ip,
+                        source="mdns",
+                        timeout=2.0,
+                    )
+                    result = SetDeviceNameResult(
+                        request_id=msg.request_id,
+                        device=refreshed,
+                    )
+                    if refreshed:
+                        self._registry.put(refreshed)
+                except WledUnreachableError as exc:
+                    result = SetDeviceNameResult(
+                        request_id=msg.request_id,
+                        error=str(exc),
+                    )
+        await self._send(result.model_dump_json())

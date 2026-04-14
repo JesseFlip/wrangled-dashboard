@@ -121,6 +121,61 @@ async def test_hub_client_responds_to_command(unused_tcp_port: int) -> None:
 
 
 @pytest.mark.asyncio
+async def test_hub_client_handles_set_device_name(unused_tcp_port: int) -> None:
+    port = unused_tcp_port
+    response: asyncio.Future[dict] = asyncio.get_event_loop().create_future()
+
+    async def handler(ws):
+        await ws.recv()  # Hello
+        await ws.send(json.dumps({"kind": "welcome", "server_version": "test"}))
+        await ws.send(
+            json.dumps(
+                {
+                    "kind": "set_device_name",
+                    "request_id": "req-rename",
+                    "mac": "aa:bb:cc:dd:ee:01",
+                    "name": "NewName",
+                }
+            )
+        )
+        raw = await ws.recv()
+        if not response.done():
+            response.set_result(json.loads(raw))
+        await asyncio.sleep(0.1)
+
+    server = await _fake_server("127.0.0.1", port, handler)
+    try:
+        registry = Registry(scanner=AsyncMock())
+        dev = _dev("aa:bb:cc:dd:ee:01", "10.0.6.1")
+        registry.put(dev)
+        refreshed = _dev("aa:bb:cc:dd:ee:01", "10.0.6.1")
+
+        with (
+            patch("wrangler.hub_client.set_name", AsyncMock(return_value=None)),
+            patch(
+                "wrangler.hub_client.probe_device",
+                AsyncMock(return_value=refreshed),
+            ),
+        ):
+            client = HubClient(
+                api_url=f"ws://127.0.0.1:{port}/ws",
+                auth_token=None,
+                wrangler_id="pi-test",
+                registry=registry,
+            )
+            task = asyncio.create_task(client.run())
+            result = await asyncio.wait_for(response, timeout=2.0)
+        assert result["kind"] == "set_device_name_result"
+        assert result["request_id"] == "req-rename"
+        assert result["device"] is not None
+        assert result["error"] is None
+        task.cancel()
+    finally:
+        server.close()
+        await server.wait_closed()
+
+
+@pytest.mark.asyncio
 async def test_hub_client_sends_pong_to_ping(unused_tcp_port: int) -> None:
     port = unused_tcp_port
     saw_pong: asyncio.Future[bool] = asyncio.get_event_loop().create_future()
