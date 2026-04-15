@@ -30,4 +30,20 @@ export const api = {
   listPresets: async () => jsonOrThrow(await fetch('/api/presets', { headers: getHeaders() })),
   listEmoji: async () => jsonOrThrow(await fetch('/api/emoji', { headers: getHeaders() })),
   listWranglers: async () => jsonOrThrow(await fetch('/api/wranglers', { headers: getHeaders() })),
+
+  // Moderation
+  modConfig: async () => jsonOrThrow(await fetch('/api/mod/config', { headers: getHeaders() })),
+  modUpdateConfig: async (updates) => jsonOrThrow(await fetch('/api/mod/config', {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(updates),
+  })),
+  modEmergencyOff: async () => jsonOrThrow(await fetch('/api/mod/emergency-off', { method: 'POST', headers: getHeaders() })),
+  modHistory: async (limit = 100) => jsonOrThrow(await fetch(`/api/mod/history?limit=${limit}`, { headers: getHeaders() })),
+  modDeviceLocks: async () => jsonOrThrow(await fetch('/api/mod/devices', { headers: getHeaders() })),
+  modLockDevice: async (mac) => jsonOrThrow(await fetch(`/api/mod/device/${encodeURIComponent(mac)}/lock`, { method: 'POST', headers: getHeaders() })),
+  modUnlockDevice: async (mac) => jsonOrThrow(await fetch(`/api/mod/device/${encodeURIComponent(mac)}/unlock`, { method: 'POST', headers: getHeaders() })),
+  modBanned: async () => jsonOrThrow(await fetch('/api/mod/banned', { headers: getHeaders() })),
+  modBan: async (userId, username, reason) => jsonOrThrow(await fetch('/api/mod/banned', {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify({ user_id: userId, username, reason }),
+  })),
+  modUnban: async (userId) => jsonOrThrow(await fetch(`/api/mod/banned/${encodeURIComponent(userId)}`, { method: 'DELETE', headers: getHeaders() })),
 };

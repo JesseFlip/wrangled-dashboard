@@ -49,7 +49,12 @@ _DEFAULT_CONFIG = {
 class ModerationStore:
     """TinyDB-backed moderation state."""
 
-    def __init__(self, db_path: str | Path = "moderation.db.json") -> None:
+    def __init__(self, db_path: str | Path | None = None) -> None:
+        if db_path is None:
+            # Default: data/ dir next to the running module, or cwd
+            data_dir = Path(__file__).resolve().parents[2] / "data"
+            data_dir.mkdir(parents=True, exist_ok=True)
+            db_path = data_dir / "moderation.db.json"
         self._db = TinyDB(str(db_path))
         self._config = self._db.table("config")
         self._device_locks = self._db.table("device_locks")

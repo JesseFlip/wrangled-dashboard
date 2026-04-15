@@ -11,7 +11,11 @@ services:
     image: ghcr.io/jesseflip/wrangled-api:latest
     container_name: wrangled-api
     ports:
-      - "127.0.0.1:8500:8500"
+      - "8500:8500"
     environment:
-      - WRANGLED_AUTH_TOKEN=1matrixtorulethemall
+      - WRANGLED_AUTH_TOKEN=${WRANGLED_AUTH_TOKEN:?set WRANGLED_AUTH_TOKEN}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID:-}
+    volumes:
+      - ./data:/app/apps/api/data    # TinyDB moderation state persists here
     restart: unless-stopped
