@@ -15,7 +15,9 @@ def test_healthz_returns_ok() -> None:
     client = TestClient(create_app())
     response = client.get("/healthz")
     assert response.status_code == 200
-    assert response.json() == {"ok": True, "wranglers": 0}
+    data = response.json()
+    assert data["ok"] is True
+    assert data["wranglers"] == 0
 
 
 def test_root_reflects_ui_build_state() -> None:

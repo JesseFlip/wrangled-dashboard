@@ -13,3 +13,12 @@ class ApiSettings(BaseSettings):
     auth_token: str | None = None
     host: str = "127.0.0.1"
     port: int = 8500
+
+
+class DiscordSettings(BaseSettings):
+    """Discord bot settings (separate prefix so DISCORD_BOT_TOKEN works)."""
+
+    model_config = SettingsConfigDict(env_prefix="DISCORD_", env_file=".env", extra="ignore")
+
+    bot_token: str | None = None
+    guild_id: int | None = None  # for instant slash-command registration during dev

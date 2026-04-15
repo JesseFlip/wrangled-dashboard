@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 from api.server import create_app
-from api.settings import ApiSettings
+from api.settings import ApiSettings, DiscordSettings
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -33,10 +33,15 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _run_serve(args: argparse.Namespace) -> int:
     settings = ApiSettings()
+    discord = DiscordSettings()
     host = args.host or settings.host
     port = args.port or settings.port
     token = None if args.auth_disabled else settings.auth_token
-    app = create_app(auth_token=token)
+    app = create_app(
+        auth_token=token,
+        discord_token=discord.bot_token,
+        discord_guild_id=discord.guild_id,
+    )
     uvicorn.run(app, host=host, port=port, log_level="info")
     return 0
 
