@@ -120,7 +120,7 @@ def _build_parser() -> argparse.ArgumentParser:
     text_p.add_argument("--brightness", type=int, default=None)
 
     preset_p = send_sub.add_parser("preset", help="Run a named preset.")
-    preset_p.add_argument("name", choices=["pytexas", "party", "chill"])
+    preset_p.add_argument("name", choices=["pytexas", "party", "chill", "love_it", "snake_attack", "lone_star", "applause", "crowd_hype", "pride_ride", "sine_wave", "late_night"])
 
     emoji_p = send_sub.add_parser("emoji", help="Resolve a single emoji to a command.")
     emoji_p.add_argument("glyph")

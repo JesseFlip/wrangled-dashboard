@@ -30,12 +30,17 @@ if TYPE_CHECKING:
 
 
 def _summarize(cmd: Command) -> str:
+    from wrangled_contracts import PresetCommand, TextCommand
     if isinstance(cmd, EffectCommand):
         return cmd.name
     if isinstance(cmd, ColorCommand):
         return f"color({cmd.color.r},{cmd.color.g},{cmd.color.b})"
     if isinstance(cmd, PowerCommand):
         return f"power({'on' if cmd.on else 'off'})"
+    if isinstance(cmd, PresetCommand):
+        return cmd.name
+    if isinstance(cmd, TextCommand):
+        return cmd.text
     return cmd.kind
 
 
@@ -56,8 +61,13 @@ def build_metadata_router() -> APIRouter:
         return {"presets": list(PRESETS.keys())}
 
     @router.get("/emoji")
-    def list_emoji() -> dict[str, dict[str, str]]:
-        return {"emoji": {k: _summarize(v) for k, v in EMOJI_COMMANDS.items()}}
+    def list_emoji() -> dict[str, dict[str, dict]]:
+        return {
+            "emoji": {
+                k: {"label": _summarize(v), "command": v}
+                for k, v in EMOJI_COMMANDS.items()
+            }
+        }
 
     return router
 
