@@ -12,26 +12,21 @@ def test_get_effects_returns_curated_list() -> None:
     response = client.get("/api/effects")
     assert response.status_code == 200
     data = response.json()
-    expected = {
-        "solid",
-        "breathe",
-        "rainbow",
-        "fire",
-        "sparkle",
-        "fireworks",
-        "matrix",
-        "pride",
-        "chase",
-        "noise",
-    }
-    assert set(data["effects"]) == expected
+    effects = set(data["effects"])
+    # Original 10 + Jesse's 4 PyTexas additions
+    assert effects >= {"solid", "fire", "rainbow", "matrix", "sparkle"}
+    assert effects >= {"plasma", "metaballs", "wavingcell", "blink"}
+    assert len(effects) >= 14
 
 
-def test_get_presets_returns_three() -> None:
+def test_get_presets_returns_all() -> None:
     client = TestClient(create_app(initial_scan=False))
     response = client.get("/api/presets")
     assert response.status_code == 200
-    assert set(response.json()["presets"]) == {"pytexas", "party", "chill"}
+    presets = set(response.json()["presets"])
+    assert presets >= {"pytexas", "party", "chill"}
+    assert presets >= {"snake_attack", "howdy", "late_night"}
+    assert len(presets) >= 13
 
 
 def test_get_emoji_returns_mapping() -> None:

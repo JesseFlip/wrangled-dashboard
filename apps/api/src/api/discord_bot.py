@@ -13,6 +13,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from wrangled_contracts import (
+    EFFECT_FX_ID,
+    PRESETS,
     RGB,
     BrightnessCommand,
     ColorCommand,
@@ -29,19 +31,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-EFFECT_NAMES = [
-    "solid",
-    "breathe",
-    "rainbow",
-    "fire",
-    "sparkle",
-    "fireworks",
-    "matrix",
-    "pride",
-    "chase",
-    "noise",
-]
-PRESET_NAMES = ["pytexas", "party", "chill"]
+EFFECT_NAMES = list(EFFECT_FX_ID.keys())
+PRESET_NAMES = list(PRESETS.keys())
 
 
 def _first_mac(hub: Hub) -> str | None:
