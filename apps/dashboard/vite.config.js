@@ -1,8 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/wrangled-dashboard/',
-})
+  build: {
+    outDir: '../api/static/dashboard',
+    emptyOutDir: true,
+  },
+  server: {
+    port: 8510,
+    strictPort: true,
+    proxy: {
+      '/api': 'http://localhost:8500',
+      '/healthz': 'http://localhost:8500',
+    },
+  },
+});
