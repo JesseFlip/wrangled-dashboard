@@ -41,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./apps/dashboard/dist
+          path: ./apps/api/static/dashboard
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
