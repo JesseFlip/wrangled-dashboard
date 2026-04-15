@@ -176,6 +176,7 @@ def test_preset_name_is_constrained() -> None:
 def test_effect_fx_id_covers_all_effect_names() -> None:
     expected = {
         "solid",
+        "blink",
         "breathe",
         "rainbow",
         "fire",
@@ -185,6 +186,10 @@ def test_effect_fx_id_covers_all_effect_names() -> None:
         "pride",
         "chase",
         "noise",
+        # PyTexas preset pack additions
+        "plasma",
+        "metaballs",
+        "wavingcell",
     }
     assert set(EFFECT_FX_ID.keys()) == expected
 
@@ -235,7 +240,15 @@ def test_command_from_emoji_strips_whitespace() -> None:
 
 
 def test_presets_cover_expected_names() -> None:
-    assert set(PRESETS.keys()) == {"pytexas", "party", "chill"}
+    expected = {
+        # Originals
+        "pytexas", "party", "chill",
+        # PyTexas preset pack
+        "snake_attack", "code_fire", "lone_star", "applause",
+        "crowd_hype", "howdy", "pride_ride", "sine_wave",
+        "discord_alert", "late_night",
+    }
+    assert set(PRESETS.keys()) == expected
 
 
 def test_pytexas_preset_is_color_then_text() -> None:

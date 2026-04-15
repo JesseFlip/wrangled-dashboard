@@ -129,9 +129,30 @@ EffectName = Literal[
     "pride",
     "chase",
     "noise",
+    # Added for PyTexas preset pack
+    "plasma",      # 2D Plasma (fx 119)
+    "metaballs",   # 2D Metaballs (fx 111)
+    "wavingcell",  # 2D Waving Cell (fx 116)
+    "blink",       # Blink (fx 1) — Discord alert flash
 ]
 
-PresetName = Literal["pytexas", "party", "chill"]
+PresetName = Literal[
+    # Originals
+    "pytexas",
+    "party",
+    "chill",
+    # PyTexas preset pack
+    "snake_attack",   # 🐍 idle screen — Python-colored matrix rain
+    "code_fire",      # 🔥 high energy between talks
+    "lone_star",      # ⭐ Texas pride ambient
+    "applause",       # 🎉 end-of-talk celebration
+    "crowd_hype",     # 💥 Discord spike trigger
+    "howdy",          # 🤠 registration / check-in marquee
+    "pride_ride",     # 🌈 Saturday rooftop party
+    "sine_wave",      # 🌊 transition / in-between effect
+    "discord_alert",  # ⚡ visual ack when bot receives a command
+    "late_night",     # 🌙 Saturday night social
+]
 
 
 class ColorCommand(BaseModel):
@@ -204,6 +225,7 @@ Command = Annotated[
 
 EFFECT_FX_ID: dict[EffectName, int] = {
     "solid": 0,
+    "blink": 1,
     "breathe": 2,
     "rainbow": 9,
     "fire": 149,  # Firenoise (2D-native); fx 66 "Fire 2012" is 1D-only
@@ -213,6 +235,9 @@ EFFECT_FX_ID: dict[EffectName, int] = {
     "pride": 93,
     "chase": 28,
     "noise": 70,
+    "metaballs": 111,   # 2D Metaballs
+    "wavingcell": 116,  # 2D Waving Cell
+    "plasma": 119,      # 2D Plasma
 }
 
 # Per-effect default parameter overrides.
@@ -220,6 +245,7 @@ EFFECT_FX_ID: dict[EffectName, int] = {
 # Tuned by taste — primary goal: avoid seizure-inducing defaults at the conference.
 EFFECT_DEFAULTS: dict[EffectName, dict[str, int]] = {
     "solid": {},
+    "blink": {"speed": 255, "intensity": 255},
     "breathe": {"speed": 48},
     "rainbow": {"speed": 140},
     "fire": {"speed": 160, "intensity": 128},
@@ -229,6 +255,9 @@ EFFECT_DEFAULTS: dict[EffectName, dict[str, int]] = {
     "pride": {"speed": 140},
     "chase": {"speed": 150},
     "noise": {"speed": 80},
+    "plasma": {"speed": 80, "intensity": 160},
+    "metaballs": {"speed": 60, "intensity": 100},
+    "wavingcell": {"speed": 100, "intensity": 140},
 }
 
 
@@ -241,7 +270,12 @@ EMOJI_COMMANDS: dict[str, Command] = {
     "🌈": EffectCommand(name="rainbow"),
     "⚡": EffectCommand(name="sparkle", speed=220),
     "🎉": EffectCommand(name="fireworks"),
-    "🐍": EffectCommand(name="matrix"),
+    "🐍": PresetCommand(name="snake_attack"),   # !idle
+    "💥": PresetCommand(name="crowd_hype"),     # !hype
+    "🤠": PresetCommand(name="howdy"),          # !texas / registration
+    "⭐": PresetCommand(name="lone_star"),      # !texas ambient
+    "🌙": PresetCommand(name="late_night"),     # !chill
+    "🌊": PresetCommand(name="sine_wave"),      # !wave transition
     "❤️": _color(255, 0, 0),
     "💙": _color(0, 0, 255),
     "💚": _color(0, 200, 0),
@@ -268,6 +302,7 @@ EMOJI_COMMANDS: dict[str, Command] = {
 
 
 PRESETS: dict[PresetName, list[Command]] = {
+    # ── Originals ───────────────────────────────────────────────────────────
     "pytexas": [
         ColorCommand(color=RGB(r=191, g=87, b=0), brightness=180),
         TextCommand(
@@ -282,6 +317,85 @@ PRESETS: dict[PresetName, list[Command]] = {
             name="breathe",
             color=RGB(r=0, g=60, b=180),
             speed=48,
+            brightness=120,
+        ),
+    ],
+    # ── PyTexas Preset Pack ──────────────────────────────────────────────────
+    # 1. 🐍 Snake Attack — idle screen, Python logo colors falling as matrix rain
+    "snake_attack": [
+        EffectCommand(
+            name="matrix",
+            color=RGB(r=255, g=212, b=59),   # Python yellow (#FFD43B) primary
+            speed=140,
+            intensity=200,
+            brightness=180,
+        ),
+    ],
+    # 2. 🔥 Code Fire — high energy between talks
+    "code_fire": [
+        BrightnessCommand(brightness=200),
+        EffectCommand(name="fire", speed=150, intensity=200, brightness=200),
+    ],
+    # 3. ⭐ Lone Star — Texas pride ambient, slow warm plasma
+    "lone_star": [
+        EffectCommand(
+            name="plasma",
+            color=RGB(r=191, g=85, b=0),     # burnt orange primary
+            speed=80,
+            intensity=160,
+            brightness=160,
+        ),
+    ],
+    # 4. 🎉 Applause — max-energy end-of-talk celebration
+    "applause": [
+        BrightnessCommand(brightness=200),
+        EffectCommand(name="fireworks", speed=255, intensity=255, brightness=200),
+    ],
+    # 5. 💥 Crowd Hype — Discord spike trigger, random explosions
+    "crowd_hype": [
+        BrightnessCommand(brightness=200),
+        EffectCommand(name="fireworks", speed=200, intensity=220, brightness=200),
+    ],
+    # 6. 🤠 Howdy — registration / check-in marquee
+    "howdy": [
+        ColorCommand(color=RGB(r=26, g=10, b=0), brightness=160),  # dark leather BG
+        TextCommand(
+            text="PyTexas 2025",
+            color=RGB(r=255, g=255, b=255),
+            speed=160,
+        ),
+    ],
+    # 7. 🌈 Pride Ride — Saturday rooftop party
+    "pride_ride": [
+        EffectCommand(name="pride", speed=80, intensity=128, brightness=180),
+    ],
+    # 8. 🌊 Sine Wave — smooth Python-colored transition effect
+    "sine_wave": [
+        EffectCommand(
+            name="wavingcell",
+            color=RGB(r=75, g=139, b=190),   # Python blue (#4B8BBE)
+            speed=100,
+            intensity=140,
+            brightness=160,
+        ),
+    ],
+    # 9. ⚡ Discord Alert — 1-2 sec visual ack before switching to requested effect
+    "discord_alert": [
+        EffectCommand(
+            name="blink",
+            color=RGB(r=88, g=101, b=242),   # Discord purple (#5865F2)
+            speed=255,
+            intensity=255,
+            brightness=200,
+        ),
+    ],
+    # 10. 🌙 Late Night — Saturday night social, slow cosmic chill
+    "late_night": [
+        EffectCommand(
+            name="metaballs",
+            color=RGB(r=75, g=0, b=130),     # deep purple (#4B0082)
+            speed=60,
+            intensity=100,
             brightness=120,
         ),
     ],
