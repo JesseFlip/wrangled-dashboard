@@ -13,7 +13,7 @@ class WranglerSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="WRANGLED_", env_file=".env", extra="ignore")
 
-    api_url: str | None = None
+    api_url: str = "wss://wrangled.lumbergh.dev/ws"
     auth_token: str | None = None
     wrangler_id: str = Field(default_factory=socket.gethostname)
 
