@@ -12,12 +12,15 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from tinydb import Query, TinyDB
+from tinydb.middlewares import CachingMiddleware
+from tinydb.storages import JSONStorage
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +56,8 @@ class ModerationStore:
             data_dir = Path(__file__).resolve().parents[2] / "data"
             data_dir.mkdir(parents=True, exist_ok=True)
             db_path = data_dir / "moderation.db.json"
-        self._db = TinyDB(str(db_path))
+        self._lock = threading.Lock()
+        self._db = TinyDB(str(db_path), storage=CachingMiddleware(JSONStorage))
         self._config = self._db.table("config")
         self._device_locks = self._db.table("device_locks")
         self._banned = self._db.table("banned_users")
@@ -61,30 +65,43 @@ class ModerationStore:
         self._rates = self._db.table("rate_limits")
         self._ensure_config()
 
+    def _read(self, fn):  # noqa: ANN001, ANN202
+        """Thread-safe TinyDB read."""
+        with self._lock:
+            return fn()
+
+    def _write(self, fn):  # noqa: ANN001, ANN202
+        """Thread-safe TinyDB write."""
+        with self._lock:
+            return fn()
+
     def _ensure_config(self) -> None:
-        q = Query()
-        if not self._config.search(q.id == "main"):
-            self._config.insert(dict(_DEFAULT_CONFIG))
+        with self._lock:
+            q = Query()
+            if not self._config.search(q.id == "main"):
+                self._config.insert(dict(_DEFAULT_CONFIG))
 
     # ── Config ────────────────────────────────────────────────────────
 
     def get_config(self) -> dict[str, Any]:
-        q = Query()
-        doc = self._config.search(q.id == "main")
-        return doc[0] if doc else dict(_DEFAULT_CONFIG)
+        with self._lock:
+            q = Query()
+            doc = self._config.search(q.id == "main")
+            return doc[0] if doc else dict(_DEFAULT_CONFIG)
 
     def update_config(self, **kwargs: Any) -> dict[str, Any]:  # noqa: ANN401
-        q = Query()
-        allowed = {
-            "bot_paused",
-            "preset_only_mode",
-            "brightness_cap",
-            "cooldown_seconds",
-            "profanity_blocklist",
-        }
-        updates = {k: v for k, v in kwargs.items() if k in allowed}
-        if updates:
-            self._config.update(updates, q.id == "main")
+        with self._lock:
+            q = Query()
+            allowed = {
+                "bot_paused",
+                "preset_only_mode",
+                "brightness_cap",
+                "cooldown_seconds",
+                "profanity_blocklist",
+            }
+            updates = {k: v for k, v in kwargs.items() if k in allowed}
+            if updates:
+                self._config.update(updates, q.id == "main")
         return self.get_config()
 
     @property
@@ -106,55 +123,64 @@ class ModerationStore:
     # ── Device locks ──────────────────────────────────────────────────
 
     def is_device_locked(self, mac: str) -> bool:
-        q = Query()
-        results = self._device_locks.search(q.mac == mac)
-        return bool(results and results[0].get("locked"))
+        with self._lock:
+            q = Query()
+            results = self._device_locks.search(q.mac == mac)
+            return bool(results and results[0].get("locked"))
 
     def lock_device(self, mac: str, reason: str = "") -> None:
-        q = Query()
-        if self._device_locks.search(q.mac == mac):
-            self._device_locks.update({"locked": True, "reason": reason}, q.mac == mac)
-        else:
-            self._device_locks.insert({"mac": mac, "locked": True, "reason": reason})
+        with self._lock:
+            q = Query()
+            if self._device_locks.search(q.mac == mac):
+                self._device_locks.update({"locked": True, "reason": reason}, q.mac == mac)
+            else:
+                self._device_locks.insert({"mac": mac, "locked": True, "reason": reason})
 
     def unlock_device(self, mac: str) -> None:
-        q = Query()
-        self._device_locks.update({"locked": False, "reason": ""}, q.mac == mac)
+        with self._lock:
+            q = Query()
+            self._device_locks.update({"locked": False, "reason": ""}, q.mac == mac)
 
     def list_device_locks(self) -> list[dict]:
-        return self._device_locks.all()
+        with self._lock:
+            return self._device_locks.all()
 
     # ── Banned users ──────────────────────────────────────────────────
 
     def is_banned(self, user_id: str) -> bool:
-        q = Query()
-        return bool(self._banned.search(q.user_id == str(user_id)))
+        with self._lock:
+            q = Query()
+            return bool(self._banned.search(q.user_id == str(user_id)))
 
     def ban_user(self, user_id: str, username: str = "", reason: str = "") -> None:
-        q = Query()
-        if not self._banned.search(q.user_id == str(user_id)):
-            self._banned.insert(
-                {
-                    "user_id": str(user_id),
-                    "username": username,
-                    "reason": reason,
-                    "banned_at": datetime.now(tz=UTC).isoformat(),
-                }
-            )
+        with self._lock:
+            q = Query()
+            if not self._banned.search(q.user_id == str(user_id)):
+                self._banned.insert(
+                    {
+                        "user_id": str(user_id),
+                        "username": username,
+                        "reason": reason,
+                        "banned_at": datetime.now(tz=UTC).isoformat(),
+                    }
+                )
 
     def unban_user(self, user_id: str) -> None:
-        q = Query()
-        self._banned.remove(q.user_id == str(user_id))
+        with self._lock:
+            q = Query()
+            self._banned.remove(q.user_id == str(user_id))
 
     def list_banned(self) -> list[dict]:
-        return self._banned.all()
+        with self._lock:
+            return self._banned.all()
 
     # ── Rate limiting ─────────────────────────────────────────────────
 
     def check_rate_limit(self, user_id: str) -> float | None:
         """Return seconds remaining on cooldown, or None if clear."""
-        q = Query()
-        results = self._rates.search(q.user_id == str(user_id))
+        with self._lock:
+            q = Query()
+            results = self._rates.search(q.user_id == str(user_id))
         if not results:
             return None
         last = results[0].get("last_command_at", 0)
@@ -166,12 +192,13 @@ class ModerationStore:
 
     def record_command(self, user_id: str) -> None:
         """Stamp this user's last-command time."""
-        q = Query()
-        now = time.time()
-        if self._rates.search(q.user_id == str(user_id)):
-            self._rates.update({"last_command_at": now}, q.user_id == str(user_id))
-        else:
-            self._rates.insert({"user_id": str(user_id), "last_command_at": now})
+        with self._lock:
+            q = Query()
+            now = time.time()
+            if self._rates.search(q.user_id == str(user_id)):
+                self._rates.update({"last_command_at": now}, q.user_id == str(user_id))
+            else:
+                self._rates.insert({"user_id": str(user_id), "last_command_at": now})
 
     # ── Command log ───────────────────────────────────────────────────
 
@@ -185,22 +212,23 @@ class ModerationStore:
         detail: str = "",
         result: str = "ok",
     ) -> None:
-        self._log.insert(
-            {
-                "who": who,
-                "source": source,
-                "device_mac": device_mac,
-                "command_kind": command_kind,
-                "detail": detail,
-                "result": result,
-                "timestamp": datetime.now(tz=UTC).isoformat(),
-            }
-        )
+        with self._lock:
+            self._log.insert(
+                {
+                    "who": who,
+                    "source": source,
+                    "device_mac": device_mac,
+                    "command_kind": command_kind,
+                    "detail": detail,
+                    "result": result,
+                    "timestamp": datetime.now(tz=UTC).isoformat(),
+                }
+            )
 
     def get_history(self, limit: int = 100) -> list[dict]:
         """Return most recent commands, newest first."""
-        all_docs = self._log.all()
-        # Sort by timestamp descending
+        with self._lock:
+            all_docs = self._log.all()
         all_docs.sort(key=lambda d: d.get("timestamp", ""), reverse=True)
         return all_docs[:limit]
 
