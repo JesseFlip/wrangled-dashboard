@@ -1,7 +1,20 @@
+import { useState } from 'react';
+import DeviceGrid from '../components/DeviceGrid.jsx';
+
 export default function ControlView() {
+  const [selectedMac, setSelectedMac] = useState(null);
+  const [devices, setDevices] = useState([]);
+
   return (
-    <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>
-      <h2>Control panel loading in the next task...</h2>
+    <div>
+      <DeviceGrid
+        selectedMac={selectedMac}
+        onSelect={setSelectedMac}
+        onDevicesLoaded={setDevices}
+      />
+      {devices.length > 0 && (
+        <p className="empty-state">Controls coming in the next commit...</p>
+      )}
     </div>
   );
 }
