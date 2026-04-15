@@ -32,8 +32,8 @@ export default function DeviceGrid({ selectedMac, onSelect, onDevicesLoaded }) {
     let cancelled = false;
     const poll = async () => {
       try {
-        const s = await api.getState(selectedMac);
-        if (!cancelled) setLiveState(s);
+        const resp = await api.getState(selectedMac);
+        if (!cancelled) setLiveState(resp.state ?? resp);
       } catch {
         // silently ignore — card shows — state
       }
