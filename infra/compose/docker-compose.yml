@@ -1,0 +1,17 @@
+# Production deploy for the api hub.
+# Run on the server behind Caddy (wrangled.lumbergh.dev).
+#
+# Usage:
+#   cd infra/compose
+#   docker compose up -d
+#   docker compose logs -f
+
+services:
+  api:
+    image: ghcr.io/jesseflip/wrangled-api:latest
+    container_name: wrangled-api
+    ports:
+      - "127.0.0.1:8500:8500"
+    environment:
+      - WRANGLED_AUTH_TOKEN=1matrixtorulethemall
+    restart: unless-stopped
