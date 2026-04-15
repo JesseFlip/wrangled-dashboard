@@ -27,6 +27,7 @@ from wrangled_contracts import (
 )
 
 if TYPE_CHECKING:
+    from api.moderation import ModerationStore
     from api.server.hub import Hub
 
 logger = logging.getLogger(__name__)
@@ -41,15 +42,60 @@ def _first_mac(hub: Hub) -> str | None:
     return devices[0].mac if devices else None
 
 
-async def _send(hub: Hub, command, mac: str | None = None) -> PushResult | str:  # noqa: ANN001
-    """Push a command to the hub. Returns PushResult or error string."""
+async def _send(  # noqa: PLR0913, PLR0911, PLR0912
+    hub: Hub,
+    command,  # noqa: ANN001
+    mac: str | None = None,
+    *,
+    mod: ModerationStore | None = None,
+    user_id: str = "unknown",
+    username: str = "unknown",
+) -> PushResult | str:
+    """Push a command to the hub with moderation checks."""
+    if mod is not None:
+        if mod.bot_paused:
+            return "Bot is paused by admin."
+        if mod.is_banned(user_id):
+            return "You are banned."
+        remaining = mod.check_rate_limit(user_id)
+        if remaining is not None:
+            return f"Cooldown: {remaining}s remaining."
+        if mod.preset_only and not isinstance(command, (PresetCommand, PowerCommand)):
+            return "Preset-only mode is active."
+        if isinstance(command, TextCommand):
+            match = mod.check_profanity(command.text)
+            if match:
+                return "Blocked content."
+        # Clamp brightness
+        cap = mod.brightness_cap
+        if hasattr(command, "brightness") and command.brightness is not None:  # noqa: SIM102
+            if command.brightness > cap:
+                command = command.model_copy(update={"brightness": cap})
+        if isinstance(command, BrightnessCommand) and command.brightness > cap:
+            command = BrightnessCommand(brightness=cap)
+
     target = mac or _first_mac(hub)
     if target is None:
         return "No WLED devices connected."
+    if mod is not None and mod.is_device_locked(target):
+        return "Device is locked by admin."
+
     try:
-        return await hub.send_command(target, command)
+        result = await hub.send_command(target, command)
     except Exception as exc:  # noqa: BLE001
         return str(exc)
+
+    if mod is not None:
+        mod.record_command(user_id)
+        mod.log_command(
+            who=f"{username} ({user_id})",
+            source="discord",
+            device_mac=target,
+            command_kind=getattr(command, "kind", "?"),
+            detail=str(getattr(command, "model_dump", dict)())[:200],
+            result="ok" if result.ok else (result.error or "fail"),
+        )
+    return result
 
 
 def _parse_color(value: str) -> RGB | None:
@@ -63,13 +109,35 @@ def _parse_color(value: str) -> RGB | None:
 class WrangledBot(commands.Bot):
     """Discord bot that drives WLED matrices via the Hub."""
 
-    def __init__(self, hub: Hub, guild_id: int | None = None) -> None:
+    def __init__(
+        self, hub: Hub, guild_id: int | None = None, mod: ModerationStore | None = None
+    ) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
         self.hub = hub
+        self.mod = mod
         self._guild_id = guild_id
         self._setup_slash_commands()
+
+    async def send(
+        self,
+        command,  # noqa: ANN001
+        *,
+        interaction: discord.Interaction | None = None,
+        ctx: commands.Context | None = None,
+    ) -> PushResult | str:
+        """Convenience: route a command through moderation + hub."""
+        if interaction:
+            uid = str(interaction.user.id)
+            uname = str(interaction.user)
+        elif ctx:
+            uid = str(ctx.author.id)
+            uname = str(ctx.author)
+        else:
+            uid = "unknown"
+            uname = "unknown"
+        return await _send(self.hub, command, mod=self.mod, user_id=uid, username=uname)
 
     def _setup_slash_commands(self) -> None:
         led_group = app_commands.Group(name="led", description="Control the WrangLED matrix")
@@ -84,14 +152,14 @@ class WrangledBot(commands.Bot):
                 await interaction.response.send_message(f"Unknown color: `{color}`", ephemeral=True)
                 return
             cmd = ColorCommand(color=rgb, brightness=brightness)
-            result = await _send(self.hub, cmd)
+            result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(_format_result(result, f"Color → {color}"))
 
         @led_group.command(name="brightness", description="Set brightness (0-200)")
         @app_commands.describe(level="Brightness level 0-200")
         async def slash_brightness(interaction: discord.Interaction, level: int) -> None:
             cmd = BrightnessCommand(brightness=min(max(level, 0), 200))
-            result = await _send(self.hub, cmd)
+            result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(_format_result(result, f"Brightness → {level}"))
 
         @led_group.command(name="effect", description="Run a named effect")
@@ -104,7 +172,7 @@ class WrangledBot(commands.Bot):
             intensity: int | None = None,
         ) -> None:
             cmd = EffectCommand(name=name.value, speed=speed, intensity=intensity)
-            result = await _send(self.hub, cmd)
+            result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(
                 _format_result(result, f"Effect → {name.value}")
             )
@@ -123,7 +191,7 @@ class WrangledBot(commands.Bot):
         ) -> None:
             rgb = _parse_color(color) if color else None
             cmd = TextCommand(text=message[:64], color=rgb, speed=min(max(speed, 32), 240))
-            result = await _send(self.hub, cmd)
+            result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(
                 _format_result(result, f'Text → "{message[:32]}"')
             )
@@ -134,19 +202,19 @@ class WrangledBot(commands.Bot):
             interaction: discord.Interaction, name: app_commands.Choice[str]
         ) -> None:
             cmd = PresetCommand(name=name.value)
-            result = await _send(self.hub, cmd)
+            result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(
                 _format_result(result, f"Preset → {name.value}")
             )
 
         @led_group.command(name="on", description="Turn the matrix on")
         async def slash_on(interaction: discord.Interaction) -> None:
-            result = await _send(self.hub, PowerCommand(on=True))
+            result = await self.send(PowerCommand(on=True), interaction=interaction)
             await interaction.response.send_message(_format_result(result, "Power → ON"))
 
         @led_group.command(name="off", description="Turn the matrix off")
         async def slash_off(interaction: discord.Interaction) -> None:
-            result = await _send(self.hub, PowerCommand(on=False))
+            result = await self.send(PowerCommand(on=False), interaction=interaction)
             await interaction.response.send_message(_format_result(result, "Power → OFF"))
 
         @led_group.command(name="status", description="Show current matrix state")
@@ -199,7 +267,13 @@ class WrangledBot(commands.Bot):
         if len(content) <= max_emoji_len and not content.startswith("!"):
             cmd = command_from_emoji(content)
             if cmd is not None:
-                result = await _send(self.hub, cmd)
+                result = await _send(
+                    self.hub,
+                    cmd,
+                    mod=self.mod,
+                    user_id=str(message.author.id),
+                    username=str(message.author),
+                )
                 await message.reply(
                     _format_result(result, f"Emoji → {content}"), mention_author=False
                 )
@@ -218,6 +292,11 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
 
     @bot.command(name="led")
     async def led_command(ctx: commands.Context, *, args: str = "") -> None:  # noqa: C901, PLR0912, PLR0915
+        async def _ctx_send(cmd) -> PushResult | str:  # noqa: ANN001
+            return await _send(
+                bot.hub, cmd, mod=bot.mod, user_id=str(ctx.author.id), username=str(ctx.author)
+            )
+
         parts = args.strip().split(maxsplit=1)
         if not parts:
             await ctx.reply(
@@ -229,10 +308,10 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
         rest = parts[1] if len(parts) > 1 else ""
 
         if verb in ("on", "power-on"):
-            result = await _send(bot.hub, PowerCommand(on=True))
+            result = await _ctx_send(PowerCommand(on=True))
             await ctx.reply(_format_result(result, "Power → ON"))
         elif verb in ("off", "power-off"):
-            result = await _send(bot.hub, PowerCommand(on=False))
+            result = await _ctx_send(PowerCommand(on=False))
             await ctx.reply(_format_result(result, "Power → OFF"))
         elif verb == "status":
             mac = _first_mac(bot.hub)
@@ -260,48 +339,53 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
             except ValueError:
                 await ctx.reply("Usage: `!led brightness <0-200>`")
                 return
-            result = await _send(bot.hub, BrightnessCommand(brightness=min(max(level, 0), 200)))
+            result = await _ctx_send(BrightnessCommand(brightness=min(max(level, 0), 200)))
             await ctx.reply(_format_result(result, f"Brightness → {level}"))
         elif verb in {"effect", "fx"}:
             name = rest.strip().lower()
             if name not in EFFECT_NAMES:
                 await ctx.reply(f"Unknown effect. Available: {', '.join(EFFECT_NAMES)}")
                 return
-            result = await _send(bot.hub, EffectCommand(name=name))
+            result = await _ctx_send(EffectCommand(name=name))
             await ctx.reply(_format_result(result, f"Effect → {name}"))
         elif verb == "text":
             if not rest:
                 await ctx.reply("Usage: `!led text <message>`")
                 return
-            result = await _send(bot.hub, TextCommand(text=rest[:64]))
+            result = await _ctx_send(TextCommand(text=rest[:64]))
             await ctx.reply(_format_result(result, f'Text → "{rest[:32]}"'))
         elif verb == "preset":
             name = rest.strip().lower()
             if name not in PRESET_NAMES:
                 await ctx.reply(f"Unknown preset. Available: {', '.join(PRESET_NAMES)}")
                 return
-            result = await _send(bot.hub, PresetCommand(name=name))
+            result = await _ctx_send(PresetCommand(name=name))
             await ctx.reply(_format_result(result, f"Preset → {name}"))
         else:
             # Try as a color
             rgb = _parse_color(verb)
             if rgb is not None:
-                result = await _send(bot.hub, ColorCommand(color=rgb))
+                result = await _ctx_send(ColorCommand(color=rgb))
                 await ctx.reply(_format_result(result, f"Color → {verb}"))
             else:
                 # Try as emoji
                 cmd = command_from_emoji(verb)
                 if cmd is not None:
-                    result = await _send(bot.hub, cmd)
+                    result = await _ctx_send(cmd)
                     await ctx.reply(_format_result(result, f"Emoji → {verb}"))
                 else:
                     verbs = "color, effect, text, preset, brightness, on, off, status"
                     await ctx.reply(f"Unknown command: `{verb}`. Try: {verbs}")
 
 
-async def run_discord_bot(hub: Hub, token: str, guild_id: int | None = None) -> None:
+async def run_discord_bot(
+    hub: Hub,
+    token: str,
+    guild_id: int | None = None,
+    mod: ModerationStore | None = None,
+) -> None:
     """Start the Discord bot. Runs forever (call as asyncio.create_task)."""
-    bot = WrangledBot(hub, guild_id=guild_id)
+    bot = WrangledBot(hub, guild_id=guild_id, mod=mod)
     setup_prefix_commands(bot)
     try:
         await bot.start(token)

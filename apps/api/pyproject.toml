@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.2",
     "wrangled-contracts",
     "discord.py>=2.4",
+    "tinydb>=4.8",
 ]
 
 [project.scripts]

@@ -25,6 +25,7 @@ from api.server.hub import (
 )
 
 if TYPE_CHECKING:
+    from api.moderation import ModerationStore
     from api.server.auth import AuthChecker
     from api.server.hub import Hub
 
@@ -62,7 +63,7 @@ def build_metadata_router() -> APIRouter:
     return router
 
 
-def build_rest_router(hub: Hub, auth: AuthChecker) -> APIRouter:  # noqa: C901
+def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None = None) -> APIRouter:  # noqa: C901, PLR0915
     dep = build_rest_auth_dep(auth)
     router = APIRouter(prefix="/api", dependencies=[Depends(dep)])
 
@@ -93,12 +94,46 @@ def build_rest_router(hub: Hub, auth: AuthChecker) -> APIRouter:  # noqa: C901
     async def post_command(mac: str, command: Command) -> PushResult:
         if hub.find_device(mac) is None:
             raise HTTPException(status_code=404, detail=f"unknown device: {mac}")
+        # Moderation checks
+        if mod is not None:
+            if mod.is_device_locked(mac):
+                raise HTTPException(status_code=403, detail="device is locked by admin")
+            from wrangled_contracts import (  # noqa: PLC0415
+                BrightnessCommand,
+                PresetCommand,
+                TextCommand,
+            )
+
+            if mod.preset_only and not isinstance(command, (PresetCommand, PowerCommand)):
+                raise HTTPException(status_code=403, detail="preset-only mode is active")
+            if isinstance(command, TextCommand):
+                match = mod.check_profanity(command.text)
+                if match:
+                    raise HTTPException(status_code=403, detail="blocked content")
+            # Clamp brightness
+            cap = mod.brightness_cap
+            if hasattr(command, "brightness") and command.brightness is not None:  # noqa: SIM102
+                if command.brightness > cap:
+                    command = command.model_copy(update={"brightness": cap})
+            if isinstance(command, BrightnessCommand) and command.brightness > cap:
+                command = BrightnessCommand(brightness=cap)
         try:
-            return await hub.send_command(mac, command)
+            result = await hub.send_command(mac, command)
         except NoWranglerForDeviceError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except WranglerTimeoutError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
+        # Log
+        if mod is not None:
+            mod.log_command(
+                who="api-user",
+                source="rest",
+                device_mac=mac,
+                command_kind=command.kind,
+                detail=str(command.model_dump(exclude={"raw_info"}))[:200],
+                result="ok" if result.ok else (result.error or "fail"),
+            )
+        return result
 
     @router.put("/devices/{mac}/name")
     async def put_name(mac: str, body: _RenameBody) -> WledDevice:
