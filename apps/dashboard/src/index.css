@@ -948,3 +948,160 @@ input, select, textarea {
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
+/* --------------------------------------------------------------------------
+   Stream tab — live feed + moderation
+   -------------------------------------------------------------------------- */
+
+.stream-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--sp-4);
+  position: relative;
+}
+
+.stream-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.stream-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3);
+}
+
+.stream-card.flagged {
+  background: #2d1a1a;
+  border-color: var(--danger);
+}
+
+.stream-card.blocked {
+  opacity: 0.7;
+}
+
+.stream-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.stream-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.stream-card-who {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--accent);
+}
+
+.stream-card-who.flagged {
+  color: var(--danger);
+}
+
+.stream-flag-indicator {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stream-card-time {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+  white-space: nowrap;
+}
+
+.stream-card-content {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.stream-card-content.blurred {
+  filter: blur(3px);
+  transition: filter var(--transition-base);
+}
+
+.stream-card-content.blurred:hover {
+  filter: none;
+}
+
+.stream-card-meta {
+  font-size: 10px;
+  color: var(--text-disabled);
+}
+
+.stream-ban-btn {
+  flex-shrink: 0;
+  align-self: center;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-3);
+  color: var(--danger);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.stream-ban-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--danger);
+}
+
+.stream-ban-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stream-ban-btn.prominent {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  font-weight: var(--weight-bold);
+}
+
+.stream-ban-btn.prominent:hover:not(:disabled) {
+  background: #c44;
+}
+
+.stream-scroll-btn {
+  position: sticky;
+  bottom: var(--sp-2);
+  align-self: center;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: background var(--transition-fast);
+  z-index: 10;
+}
+
+.stream-scroll-btn:hover {
+  background: var(--accent-hover);
+}
