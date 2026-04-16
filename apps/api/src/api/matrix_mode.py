@@ -40,6 +40,7 @@ class MatrixModeManager:
         self._config: dict[str, Any] = {}
         self._task: asyncio.Task | None = None
         self._countdown_end: datetime | None = None
+        self._last_pushed_text: str | None = None
 
     @property
     def mode(self) -> str:
@@ -102,11 +103,13 @@ class MatrixModeManager:
 
     async def _run(self) -> None:
         """Background loop — pushes text to all devices at mode-appropriate intervals."""
+        self._last_pushed_text = None  # reset on mode change
         try:
             while True:
                 text = self._generate_text()
-                if text:
+                if text and text != self._last_pushed_text:
                     await self._push_text(text)
+                    self._last_pushed_text = text
                 await asyncio.sleep(self._tick_interval())
         except asyncio.CancelledError:
             return
