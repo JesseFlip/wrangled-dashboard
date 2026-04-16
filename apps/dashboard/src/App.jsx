@@ -117,7 +117,13 @@ export default function App() {
           brightness={brightness}
           onBrightnessChange={handleBrightnessChange}
           color={color}
-          onColorChange={setColor}
+          onColorChange={(hex) => {
+            setColor(hex);
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            api.broadcastCommand(group, { kind: 'color', color: { r, g, b }, brightness }).catch(() => {});
+          }}
           onKill={handleKill}
           deviceCount={deviceCount}
           discordActive={discordActive}
