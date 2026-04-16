@@ -43,6 +43,17 @@ export const api = {
   getCurrentSession: async () => jsonOrThrow(await fetch('/api/schedule/current', { headers: getHeaders() })),
   getNextSession: async () => jsonOrThrow(await fetch('/api/schedule/next', { headers: getHeaders() })),
 
+  // Broadcast — send a command to every device in a group (or all devices)
+  broadcastCommand: async (group, command) => {
+    const { devices } = await jsonOrThrow(await fetch('/api/devices', { headers: getHeaders() }));
+    const targets = group ? devices.filter((d) => d.group === group) : devices;
+    await Promise.allSettled(
+      targets.map((d) => fetch(`/api/devices/${encodeURIComponent(d.mac)}/commands`, {
+        method: 'POST', headers: getHeaders(), body: JSON.stringify(command),
+      }).then(jsonOrThrow)),
+    );
+  },
+
   // Moderation
   modConfig: async () => jsonOrThrow(await fetch('/api/mod/config', { headers: getHeaders() })),
   modUpdateConfig: async (updates) => jsonOrThrow(await fetch('/api/mod/config', {
