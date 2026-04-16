@@ -44,15 +44,13 @@ export default function App() {
         if (cancelled) return;
 
         if (devicesRes.status === 'fulfilled') {
-          const devices = devicesRes.value;
-          setDeviceCount(Array.isArray(devices) ? devices.length : 0);
+          const devices = devicesRes.value?.devices ?? [];
+          setDeviceCount(devices.length);
 
           // Derive groups from device tags if available, fallback to ['all']
           const tagSet = new Set(['all']);
-          if (Array.isArray(devices)) {
-            for (const d of devices) {
-              if (d.group) tagSet.add(d.group);
-            }
+          for (const d of devices) {
+            if (d.group) tagSet.add(d.group);
           }
           setGroups([...tagSet]);
         }
