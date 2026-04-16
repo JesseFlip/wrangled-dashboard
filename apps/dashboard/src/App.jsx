@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import AuthGate from './components/AuthGate.jsx';
 import GlobalBar from './components/GlobalBar.jsx';
@@ -73,10 +73,14 @@ export default function App() {
     };
   }, []);
 
+  const brightnessTimer = useRef(null);
   const handleBrightnessChange = useCallback(
     (val) => {
       setBrightness(val);
-      api.broadcastCommand(group, { kind: 'brightness', brightness: val }).catch(() => {});
+      clearTimeout(brightnessTimer.current);
+      brightnessTimer.current = setTimeout(() => {
+        api.broadcastCommand(group, { kind: 'brightness', brightness: val }).catch(() => {});
+      }, 500);
     },
     [group],
   );
