@@ -26,7 +26,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_TICK_SECONDS = 10  # how often to re-push text to the matrix
+_TICK_FAST = 1   # countdown modes — every second
+_TICK_SLOW = 10  # clock/schedule — every 10s
 
 
 class MatrixModeManager:
@@ -94,14 +95,19 @@ class MatrixModeManager:
         if self._task is not None:
             self._task.cancel()
 
+    def _tick_interval(self) -> float:
+        if self._mode in ("countdown_to", "countdown_minutes"):
+            return _TICK_FAST
+        return _TICK_SLOW
+
     async def _run(self) -> None:
-        """Background loop — pushes text to all devices every _TICK_SECONDS."""
+        """Background loop — pushes text to all devices at mode-appropriate intervals."""
         try:
             while True:
                 text = self._generate_text()
                 if text:
                     await self._push_text(text)
-                await asyncio.sleep(_TICK_SECONDS)
+                await asyncio.sleep(self._tick_interval())
         except asyncio.CancelledError:
             return
         except Exception:
