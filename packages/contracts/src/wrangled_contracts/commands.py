@@ -148,6 +148,7 @@ PresetName = Literal[
     "applause",       # 🎉 end-of-talk celebration
     "crowd_hype",     # 💥 Discord spike trigger
     "howdy",          # 🤠 registration / check-in marquee
+    "love_it",       # ❤️ hype / applause alternative
     "pride_ride",     # 🌈 Saturday rooftop party
     "sine_wave",      # 🌊 transition / in-between effect
     "discord_alert",  # ⚡ visual ack when bot receives a command
@@ -276,7 +277,7 @@ EMOJI_COMMANDS: dict[str, Command] = {
     "⭐": PresetCommand(name="lone_star"),      # !texas ambient
     "🌙": PresetCommand(name="late_night"),     # !chill
     "🌊": PresetCommand(name="sine_wave"),      # !wave transition
-    "❤️": _color(255, 0, 0),
+    "❤️": PresetCommand(name="love_it"),
     "💙": _color(0, 0, 255),
     "💚": _color(0, 200, 0),
     "💜": _color(180, 0, 255),
@@ -360,16 +361,25 @@ PRESETS: dict[PresetName, list[Command]] = {
     "howdy": [
         ColorCommand(color=RGB(r=26, g=10, b=0), brightness=160),  # dark leather BG
         TextCommand(
-            text="PyTexas 2025",
+            text="PyTexas 2026",
             color=RGB(r=255, g=255, b=255),
             speed=160,
         ),
     ],
-    # 7. 🌈 Pride Ride — Saturday rooftop party
+    # 7. ❤️ Love It — 💥 replacement with hearts and red text
+    "love_it": [
+        BrightnessCommand(brightness=200),
+        TextCommand(
+            text="❤️❤️❤️ Love it ❤️❤️❤️",
+            color=RGB(r=255, g=0, b=0),
+            speed=160,
+        ),
+    ],
+    # 8. 🌈 Pride Ride — Saturday rooftop party
     "pride_ride": [
         EffectCommand(name="pride", speed=80, intensity=128, brightness=180),
     ],
-    # 8. 🌊 Sine Wave — smooth Python-colored transition effect
+    # 9. 🌊 Sine Wave — smooth Python-colored transition effect
     "sine_wave": [
         EffectCommand(
             name="wavingcell",
@@ -379,7 +389,7 @@ PRESETS: dict[PresetName, list[Command]] = {
             brightness=160,
         ),
     ],
-    # 9. ⚡ Discord Alert — 1-2 sec visual ack before switching to requested effect
+    # 10. ⚡ Discord Alert — 1-2 sec visual ack before switching to requested effect
     "discord_alert": [
         EffectCommand(
             name="blink",
@@ -389,7 +399,7 @@ PRESETS: dict[PresetName, list[Command]] = {
             brightness=200,
         ),
     ],
-    # 10. 🌙 Late Night — Saturday night social, slow cosmic chill
+    # 11. 🌙 Late Night — Saturday night social, slow cosmic chill
     "late_night": [
         EffectCommand(
             name="metaballs",

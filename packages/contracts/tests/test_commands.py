@@ -245,7 +245,7 @@ def test_presets_cover_expected_names() -> None:
         "pytexas", "party", "chill",
         # PyTexas preset pack
         "snake_attack", "code_fire", "lone_star", "applause",
-        "crowd_hype", "howdy", "pride_ride", "sine_wave",
+        "crowd_hype", "howdy", "love_it", "pride_ride", "sine_wave",
         "discord_alert", "late_night",
     }
     assert set(PRESETS.keys()) == expected
