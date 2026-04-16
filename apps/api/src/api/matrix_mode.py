@@ -97,7 +97,9 @@ class MatrixModeManager:
             self._task.cancel()
 
     def _tick_interval(self) -> float:
-        if self._mode in ("countdown_to", "countdown_minutes"):
+        # Clock/countdown: tick every second so display updates promptly.
+        # The _last_pushed_text check prevents redundant sends.
+        if self._mode in ("clock", "countdown_to", "countdown_minutes"):
             return _TICK_FAST
         return _TICK_SLOW
 
