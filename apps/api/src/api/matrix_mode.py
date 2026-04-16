@@ -50,6 +50,12 @@ class MatrixModeManager:
     def config(self) -> dict[str, Any]:
         return {"mode": self._mode, **self._config}
 
+    def update_config(self, **kwargs: Any) -> dict[str, Any]:
+        """Update config without changing mode. Forces a re-push on next tick."""
+        self._config.update(kwargs)
+        self._last_pushed_text = None  # force re-push with new config
+        return self.config
+
     def set_mode(self, mode: str, **kwargs: Any) -> dict[str, Any]:
         """Switch mode. Restarts the background loop."""
         self._mode = mode
@@ -109,6 +115,10 @@ class MatrixModeManager:
         try:
             while True:
                 text = self._generate_text()
+                if text is None and self._mode in ("countdown_to", "countdown_minutes"):
+                    # Countdown finished — fireworks then idle
+                    await self._countdown_finished()
+                    return
                 if text and text != self._last_pushed_text:
                     # Short static text (clock/countdown) shouldn't scroll
                     no_scroll = self._mode in ("clock", "countdown_to", "countdown_minutes")
@@ -144,7 +154,7 @@ class MatrixModeManager:
         now = datetime.now(tz=UTC)
         remaining = self._countdown_end - now
         if remaining.total_seconds() <= 0:
-            return "TIME!"
+            return None  # signal countdown finished
         total_secs = int(remaining.total_seconds())
         minutes, seconds = divmod(total_secs, 60)
         return f"{minutes}:{seconds:02d}"
@@ -192,3 +202,17 @@ class MatrixModeManager:
                 await self._hub.send_command(device.mac, cmd, timeout=3.0)
             except Exception:  # noqa: BLE001
                 logger.debug("mode push failed for %s", device.mac)
+
+    async def _countdown_finished(self) -> None:
+        """Fire fireworks effect for 10s, then switch to idle."""
+        from wrangled_contracts import EffectCommand  # noqa: PLC0415
+
+        logger.info("countdown finished — firing fireworks")
+        fx = EffectCommand(name="fireworks", speed=128, intensity=200)
+        for device in self._hub.all_devices():
+            try:
+                await self._hub.send_command(device.mac, fx, timeout=3.0)
+            except Exception:  # noqa: BLE001
+                pass
+        await asyncio.sleep(10)
+        self.set_mode("idle")

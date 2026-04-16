@@ -131,20 +131,22 @@ export default function App() {
             const g = parseInt(hex.slice(3, 5), 16);
             const b = parseInt(hex.slice(5, 7), 16);
             const rgb = { r, g, b };
-            // Also update matrix mode color if a mode is active
+            // If a matrix mode is active, just update its color config (no broadcast)
             api.getMode().then((m) => {
               if (m?.mode && m.mode !== 'idle') {
-                api.setMode({ mode: m.mode, color: rgb }).catch(() => {});
+                api.updateModeConfig({ mode: m.mode, color: rgb }).catch(() => {});
+                return;
+              }
+              // Idle mode — re-send last command with new color, or solid color
+              const last = lastCommandRef.current;
+              if (last) {
+                const updated = { ...last, color: rgb, brightness };
+                api.broadcastCommand(group, updated).catch(() => {});
+                lastCommandRef.current = updated;
+              } else {
+                api.broadcastCommand(group, { kind: 'color', color: rgb, brightness }).catch(() => {});
               }
             }).catch(() => {});
-            const last = lastCommandRef.current;
-            if (last) {
-              const updated = { ...last, color: rgb, brightness };
-              api.broadcastCommand(group, updated).catch(() => {});
-              lastCommandRef.current = updated;
-            } else {
-              api.broadcastCommand(group, { kind: 'color', color: rgb, brightness }).catch(() => {});
-            }
           }}
           onKill={handleKill}
           deviceCount={deviceCount}

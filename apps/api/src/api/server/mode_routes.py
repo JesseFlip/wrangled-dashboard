@@ -45,6 +45,18 @@ def build_mode_router(manager: MatrixModeManager, auth: AuthChecker) -> APIRoute
             kwargs["brightness"] = body.brightness
         return manager.set_mode(body.mode, **kwargs)
 
+    @router.patch("")
+    async def update_mode_config(body: ModeBody) -> dict[str, Any]:
+        """Update mode config (e.g. color) without changing/restarting mode."""
+        kwargs: dict[str, Any] = {}
+        if body.color:
+            kwargs["color"] = body.color
+        if body.speed is not None:
+            kwargs["speed"] = body.speed
+        if body.brightness is not None:
+            kwargs["brightness"] = body.brightness
+        return manager.update_config(**kwargs)
+
     @router.post("/idle")
     async def go_idle() -> dict[str, Any]:
         return manager.set_mode("idle")
