@@ -29,83 +29,113 @@ def _rgb_triplet(color: RGB) -> list[list[int]]:
     return [[color.r, color.g, color.b], [0, 0, 0], [0, 0, 0]]
 
 
-def _build_color(cmd: ColorCommand) -> dict:
-    body: dict = {
-        "on": True,
-        "seg": [{"id": 0, "fx": 0, "col": _rgb_triplet(cmd.color)}],
-    }
-    if cmd.brightness is not None:
+def _build_segment(cmd: Command, seg_id: int = 0) -> dict | None:
+    """Build a WLED segment dictionary if the command is segment-based."""
+    if isinstance(cmd, ColorCommand):
+        seg = {"id": seg_id, "fx": 0, "col": _rgb_triplet(cmd.color), "on": True}
+        if cmd.start is not None:
+            seg["start"] = cmd.start
+        if cmd.stop is not None:
+            seg["stop"] = cmd.stop
+        return seg
+
+    if isinstance(cmd, EffectCommand):
+        defaults = EFFECT_DEFAULTS.get(cmd.name, {})
+        speed = cmd.speed if cmd.speed is not None else defaults.get("speed")
+        intensity = cmd.intensity if cmd.intensity is not None else defaults.get("intensity")
+        seg: dict = {"id": seg_id, "fx": EFFECT_FX_ID[cmd.name], "m12": 1, "on": True}
+        if speed is not None:
+            seg["sx"] = speed
+        if intensity is not None:
+            seg["ix"] = intensity
+        if cmd.color is not None:
+            seg["col"] = _rgb_triplet(cmd.color)
+        if cmd.start is not None:
+            seg["start"] = cmd.start
+        if cmd.stop is not None:
+            seg["stop"] = cmd.stop
+        return seg
+
+    if isinstance(cmd, TextCommand):
+        seg = {
+            "id": seg_id,
+            "fx": 122,
+            "n": cmd.text,
+            "sx": cmd.speed,
+            "ix": cmd.intensity if cmd.intensity is not None else 128,
+            "o1": False,
+            "on": True,
+        }
+        if cmd.color is not None:
+            seg["col"] = _rgb_triplet(cmd.color)
+        if cmd.start is not None:
+            seg["start"] = cmd.start
+        if cmd.stop is not None:
+            seg["stop"] = cmd.stop
+        return seg
+
+    return None
+
+
+def _build_command_body(cmd: Command) -> dict:
+    """Build a WLED JSON body for a single command."""
+    body: dict = {}
+
+    # Handle global state
+    if isinstance(cmd, BrightnessCommand):
         body["bri"] = cmd.brightness
+    elif isinstance(cmd, PowerCommand):
+        body["on"] = cmd.on
+    elif isinstance(cmd, (ColorCommand, EffectCommand, TextCommand)):
+        seg = _build_segment(cmd, seg_id=0)
+        if seg:
+            # Layer the command on ID 0 and clear IDs 1-15 to prevent guest flickers
+            body["seg"] = [seg] + [{"id": i, "stop": 0} for i in range(1, 16)]
+            body["on"] = True
+            if isinstance(cmd, TextCommand):
+                body["transition"] = 0
+            # Special case: brightness can be per-command
+            if hasattr(cmd, "brightness") and cmd.brightness is not None:
+                body["bri"] = cmd.brightness
+
     return body
 
 
-def _build_brightness(cmd: BrightnessCommand) -> dict:
-    return {"bri": cmd.brightness}
+def _build_preset_body(name: str, speed_override: int | None = None) -> dict:
+    """Consolidate all commands in a preset into a single WLED body."""
+    commands = PRESETS[name]
+    body: dict = {"on": True}
+    segments: list[dict] = []
+    seg_id = 0
 
+    for cmd in commands:
+        if isinstance(cmd, BrightnessCommand):
+            body["bri"] = cmd.brightness
+        elif isinstance(cmd, PowerCommand):
+            body["on"] = cmd.on
+        else:
+            # Apply speed override to Effect or Text commands
+            if speed_override is not None:
+                if isinstance(cmd, (EffectCommand, TextCommand)):
+                    cmd = cmd.model_copy(update={"speed": speed_override})
 
-def _build_power(cmd: PowerCommand) -> dict:
-    return {"on": cmd.on}
+            seg = _build_segment(cmd, seg_id=seg_id)
+            if seg:
+                # Ensure text commands have 0 transition for smooth scrolling
+                if isinstance(cmd, TextCommand):
+                    body["transition"] = 0
+                
+                if hasattr(cmd, "brightness") and cmd.brightness is not None:
+                    body["bri"] = cmd.brightness
+                segments.append(seg)
+                seg_id += 1
 
-
-def _build_effect(cmd: EffectCommand) -> dict:
-    # m12=1 ("bar" expansion) makes 1D effects fill the full matrix height.
-    # No-op for effects that are already 2D-native.
-    defaults = EFFECT_DEFAULTS.get(cmd.name, {})
-    speed = cmd.speed if cmd.speed is not None else defaults.get("speed")
-    intensity = cmd.intensity if cmd.intensity is not None else defaults.get("intensity")
-    brightness = cmd.brightness if cmd.brightness is not None else defaults.get("brightness")
-
-    seg: dict = {"id": 0, "fx": EFFECT_FX_ID[cmd.name], "m12": 1}
-    if speed is not None:
-        seg["sx"] = speed
-    if intensity is not None:
-        seg["ix"] = intensity
-    if cmd.color is not None:
-        seg["col"] = _rgb_triplet(cmd.color)
-    body: dict = {"on": True, "seg": [seg]}
-    if brightness is not None:
-        body["bri"] = brightness
+    if segments:
+        # Clear any remaining segments up to 15 to ensure a clean state
+        for i in range(seg_id, 16):
+            segments.append({"id": i, "stop": 0})
+        body["seg"] = segments
     return body
-
-
-def _build_text(cmd: TextCommand) -> dict:
-    seg: dict = {
-        "id": 0,
-        "fx": 122,
-        "n": cmd.text,
-        "sx": cmd.speed,
-        "ix": 128,
-        "o1": False,
-    }
-    if cmd.color is not None:
-        seg["col"] = _rgb_triplet(cmd.color)
-    body: dict = {"on": True, "seg": [seg]}
-    if cmd.brightness is not None:
-        body["bri"] = cmd.brightness
-    return body
-
-
-def _build_command_body(command: Command) -> dict:
-    """Build a single WLED body for any non-preset Command."""
-    match command:
-        case ColorCommand():
-            return _build_color(command)
-        case BrightnessCommand():
-            return _build_brightness(command)
-        case EffectCommand():
-            return _build_effect(command)
-        case TextCommand():
-            return _build_text(command)
-        case PowerCommand():
-            return _build_power(command)
-        case PresetCommand():
-            msg = "cannot build a single body from a PresetCommand"
-            raise ValueError(msg)
-
-
-def _build_preset_bodies(cmd: PresetCommand) -> list[dict]:
-    """Expand a PresetCommand into a list of WLED bodies."""
-    return [_build_command_body(sub) for sub in PRESETS[cmd.name]]
 
 
 async def _post_one(
@@ -119,7 +149,7 @@ async def _post_one(
     try:
         response = await client.post(
             url,
-            content=json.dumps(body).encode(),
+            content=json.dumps(body, ensure_ascii=False).encode(),
             headers={"content-type": "application/json"},
             timeout=timeout,
         )
@@ -144,12 +174,14 @@ async def push_command(
 ) -> PushResult:
     """Send a Command to a WLED device. Never raises."""
     if isinstance(command, PresetCommand):
-        bodies = _build_preset_bodies(command)
+        bodies = [_build_preset_body(command.name, speed_override=command.speed_override)]
     else:
         bodies = [_build_command_body(command)]
 
     last: PushResult = PushResult(ok=True, status=200)
     for body in bodies:
+        if not body:
+            continue
         last = await _post_one(client, device, body, timeout=timeout)
         if not last.ok:
             return last

@@ -134,25 +134,49 @@ EffectName = Literal[
     "metaballs",   # 2D Metaballs (fx 111)
     "wavingcell",  # 2D Waving Cell (fx 116)
     "blink",       # Blink (fx 1) — Discord alert flash
+    "ripple",      # 2D Ripple (fx 113)
+    "meteor",      # Meteor (fx 65)
+    "sweep",       # Sweep (fx 26)
+    "theater",     # Theater / Chase (fx 10)
+    "police",      # Police / Strobe (fx 40)
+    "noise",       # Noise (fx 70)
 ]
 
 PresetName = Literal[
-    # Originals
-    "pytexas",
-    "party",
-    "chill",
-    # PyTexas preset pack
-    "snake_attack",   # 🐍 idle screen — Python-colored matrix rain
-    "code_fire",      # 🔥 high energy between talks
-    "lone_star",      # ⭐ Texas pride ambient
-    "applause",       # 🎉 end-of-talk celebration
-    "crowd_hype",     # 💥 Discord spike trigger
-    "howdy",          # 🤠 registration / check-in marquee
-    "love_it",       # ❤️ hype / applause alternative
-    "pride_ride",     # 🌈 Saturday rooftop party
-    "sine_wave",      # 🌊 transition / in-between effect
-    "discord_alert",  # ⚡ visual ack when bot receives a command
-    "late_night",     # 🌙 Saturday night social
+    # ── PyTexas Lore Overhaul 2026 ───────────────────────────────────────────
+    "pytexas",        # 🤠 Brand marquee
+    "party",          # 🎉 Rainbow celebration
+    "chill",          # 🌊 Layered cosmic chill
+    "love_it",        # ❤️ Hype celebration
+    "snake_attack",   # 🐍 Python matrix rain
+    "the_gil",        # 🔒 Global Interpreter Lock
+    "whitespace",     # ⌨️ Significant Whitespace
+    "import_gravity", # 🛸 import gravity (xkcd)
+    "zen",            # 🧘 Zen of Python
+    "deep_heart",     # ❤️ Deep in the Heart
+    "bluebonnets",    # 🪻 Bluebonnet Field
+    "yellow_rose",    # 🌹 The Yellow Rose
+    "tumbleweed",     # 🌾 Tumbleweed
+    "prod_down",      # 🚨 Production is Down
+    "merge_conflict", # ⚔️ Merge Conflict
+    "off_by_one",     # 🔢 Off-by-One Error
+    "garbage_collector", # 🧹 Garbage Collector
+    "spam_eggs",      # 🍳 Spam & Eggs (Monty Python)
+    "borg",           # 🤖 Borg Assimilation
+    "pep8",           # 📏 Pep 8 Check
+    "asyncio_loop",   # 🔄 Asyncio Loop
+    "duck_typer",     # 🦆 Duck Typer
+    "discord_alert",  # ⚡ visual ack
+    # ── Moderator & Lore expansion ──────────────────────────────────────────
+    "howdy",          # 👋 Standard greeting
+    "breaktime",      # ☕ Breaktime
+    "networking",     # 🤝 Networking Event
+    "respectful",     # 🤝 Be Respectful!
+    "silent_phones",  # 📵 Silence Phones
+    "talk_soon",      # 🎙️ Talk Starting
+    "found_item",     # 🎒 Lost & Found
+    "qa_session",     # ❓ Q&A Session
+    "five_min",       # ⏱️ 5 min remaining
 ]
 
 
@@ -164,6 +188,8 @@ class ColorCommand(BaseModel):
     kind: Literal["color"] = "color"
     color: RGB
     brightness: int | None = Field(default=None, ge=0, le=200)
+    start: int | None = None
+    stop: int | None = None
 
 
 class BrightnessCommand(BaseModel):
@@ -186,6 +212,8 @@ class EffectCommand(BaseModel):
     speed: int | None = Field(default=None, ge=0, le=255)
     intensity: int | None = Field(default=None, ge=0, le=255)
     brightness: int | None = Field(default=None, ge=0, le=200)
+    start: int | None = None
+    stop: int | None = None
 
 
 class TextCommand(BaseModel):
@@ -194,10 +222,13 @@ class TextCommand(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     kind: Literal["text"] = "text"
-    text: str = Field(max_length=64, min_length=1)
+    text: str = Field(max_length=200, min_length=1)
     color: RGB | None = None
-    speed: int = Field(default=128, ge=32, le=240)
+    speed: int = Field(default=20, ge=0, le=240)
+    intensity: int | None = Field(default=None, ge=0, le=255)
     brightness: int | None = Field(default=None, ge=0, le=200)
+    start: int | None = None
+    stop: int | None = None
 
 
 class PresetCommand(BaseModel):
@@ -207,6 +238,7 @@ class PresetCommand(BaseModel):
 
     kind: Literal["preset"] = "preset"
     name: PresetName
+    speed_override: int | None = Field(default=None, ge=0, le=255)
 
 
 class PowerCommand(BaseModel):
@@ -239,6 +271,12 @@ EFFECT_FX_ID: dict[EffectName, int] = {
     "metaballs": 111,   # 2D Metaballs
     "wavingcell": 116,  # 2D Waving Cell
     "plasma": 119,      # 2D Plasma
+    "ripple": 113,      # 2D Ripple
+    "meteor": 65,       # Meteor
+    "sweep": 26,        # Sweep
+    "theater": 10,      # Theater / Chase
+    "police": 40,       # Police / Strobe
+    "noise": 70,        # Noise
 }
 
 # Per-effect default parameter overrides.
@@ -272,12 +310,23 @@ EMOJI_COMMANDS: dict[str, Command] = {
     "⚡": EffectCommand(name="sparkle", speed=220),
     "🎉": EffectCommand(name="fireworks"),
     "🐍": PresetCommand(name="snake_attack"),   # !idle
-    "💥": PresetCommand(name="crowd_hype"),     # !hype
-    "🤠": PresetCommand(name="howdy"),          # !texas / registration
-    "⭐": PresetCommand(name="lone_star"),      # !texas ambient
-    "🌙": PresetCommand(name="late_night"),     # !chill
-    "🌊": PresetCommand(name="sine_wave"),      # !wave transition
+    "💥": PresetCommand(name="love_it"),        # !hype
+    "🤠": PresetCommand(name="pytexas"),        # !texas / registration
+    "⭐": PresetCommand(name="zen"),             # !zen ambient
+    "🌙": PresetCommand(name="chill"),           # !chill
+    "🌊": PresetCommand(name="asyncio_loop"),    # !loop
     "❤️": PresetCommand(name="love_it"),
+    "🔒": PresetCommand(name="the_gil"),
+    "⌨️": PresetCommand(name="whitespace"),
+    "🛸": PresetCommand(name="import_gravity"),
+    "🧘": PresetCommand(name="zen"),
+    "🚨": PresetCommand(name="prod_down"),
+    "⚔️": PresetCommand(name="merge_conflict"),
+    "📏": PresetCommand(name="pep8"),
+    "🧹": PresetCommand(name="garbage_collector"),
+    "🍳": PresetCommand(name="spam_eggs"),
+    "🤖": PresetCommand(name="borg"),
+    "🦆": PresetCommand(name="duck_typer"),
     "💙": _color(0, 0, 255),
     "💚": _color(0, 200, 0),
     "💜": _color(180, 0, 255),
@@ -303,14 +352,57 @@ EMOJI_COMMANDS: dict[str, Command] = {
 
 
 PRESETS: dict[PresetName, list[Command]] = {
-    # ── Originals ───────────────────────────────────────────────────────────
+    # ── Foundation ──────────────────────────────────────────────────────────
+    # ── PyTexas Brand ───────────────────────────────────────────────────────
+    # 🤠 PyTexas 2026 — Clean white scrolling text on black background
     "pytexas": [
-        ColorCommand(color=RGB(r=191, g=87, b=0), brightness=180),
-        TextCommand(
+         TextCommand(
             text="PyTexas 2026",
-            color=RGB(r=255, g=100, b=0),
-            speed=160,
+            color=RGB(r=255, g=255, b=255),
+            speed=22, # Medium speed
         ),
+    ],
+    # 👋 Howdy — Standard PyTexas Greeting
+    "howdy": [
+        TextCommand(
+            text="Welcome to PyTexas 2026",
+            color=RGB(r=255, g=122, b=0),
+            speed=25, # Medium speed
+        ),
+    ],
+    # ☕ Breaktime
+    "breaktime": [
+        TextCommand(text="Breaktime", color=RGB(r=0, g=200, b=255), speed=18), # Short text -> Slow
+    ],
+    # 🤝 Networking
+    "networking": [
+        TextCommand(text="PyTexas Networking Event", color=RGB(r=200, g=100, b=255), speed=28), # Medium-long
+    ],
+    # 🤝 Be Respectful
+    "respectful": [
+        TextCommand(text="Be Respectful!", color=RGB(r=255, g=255, b=0), speed=18), # Short
+    ],
+
+    # ── Moderator Pack ──────────────────────────────────────────────────────
+    # 📵 Silence Phones
+    "silent_phones": [
+        TextCommand(text="Silence your phones!", color=RGB(r=255, g=0, b=0), speed=25),
+    ],
+    # 🎙️ Talk Starting
+    "talk_soon": [
+        TextCommand(text="Next talk starting soon", color=RGB(r=0, g=255, b=0), speed=25),
+    ],
+    # 🎒 Lost & Found
+    "found_item": [
+        TextCommand(text="Found Item - See Registration", color=RGB(r=255, g=255, b=255), speed=30),
+    ],
+    # ❓ Q&A Session
+    "qa_session": [
+        TextCommand(text="Q&A Session", color=RGB(r=255, g=200, b=0), speed=20),
+    ],
+    # ⏱️ 5 Minutes Remaining
+    "five_min": [
+        TextCommand(text="5 Minutes Remaining", color=RGB(r=255, g=165, b=0), speed=25),
     ],
     "party": [EffectCommand(name="rainbow", speed=240, brightness=200)],
     "chill": [
@@ -320,93 +412,119 @@ PRESETS: dict[PresetName, list[Command]] = {
             speed=48,
             brightness=120,
         ),
+        TextCommand(
+            text="We Chillin'",
+            color=RGB(r=255, g=255, b=255),
+            speed=128,
+        ),
     ],
-    # ── PyTexas Preset Pack ──────────────────────────────────────────────────
-    # 1. 🐍 Snake Attack — idle screen, Python logo colors falling as matrix rain
+    "love_it": [
+        BrightnessCommand(brightness=200),
+        EffectCommand(name="breathe", color=RGB(r=255, g=0, b=0), speed=100, brightness=150),
+        TextCommand(
+            text="* * * LOVE IT * * *",
+            color=RGB(r=255, g=0, b=0),
+            speed=180,
+        ),
+    ],
     "snake_attack": [
         EffectCommand(
             name="matrix",
-            color=RGB(r=255, g=212, b=59),   # Python yellow (#FFD43B) primary
+            color=RGB(r=255, g=212, b=59),   # Python yellow
             speed=140,
             intensity=200,
             brightness=180,
         ),
     ],
-    # 2. 🔥 Code Fire — high energy between talks
-    "code_fire": [
-        BrightnessCommand(brightness=200),
-        EffectCommand(name="fire", speed=150, intensity=200, brightness=200),
+
+    # ── The "Pythonic" Classics ─────────────────────────────────────────────
+    # 🐍 The Global Interpreter Lock (GIL) — white "lock" on flickering grid
+    "the_gil": [
+        EffectCommand(name="noise", color=RGB(r=30, g=30, b=30), speed=200, brightness=80, start=0, stop=512),
+        ColorCommand(color=RGB(r=255, g=255, b=255), brightness=200, start=32, stop=33), # one "locked" pixel
     ],
-    # 3. ⭐ Lone Star — Texas pride ambient, slow warm plasma
-    "lone_star": [
-        EffectCommand(
-            name="plasma",
-            color=RGB(r=191, g=85, b=0),     # burnt orange primary
-            speed=80,
-            intensity=160,
-            brightness=160,
-        ),
+    # ⌨️ Significant Whitespace — rigid grid pattern
+    "whitespace": [
+        EffectCommand(name="theater", color=RGB(r=255, g=255, b=255), speed=0, intensity=100),
     ],
-    # 4. 🎉 Applause — max-energy end-of-talk celebration
-    "applause": [
-        BrightnessCommand(brightness=200),
-        EffectCommand(name="fireworks", speed=255, intensity=255, brightness=200),
+    # 🛸 Import Gravity — flying blue/white xkcd reference
+    "import_gravity": [
+        EffectCommand(name="meteor", color=RGB(r=55, g=118, b=171), speed=200, intensity=100), # Python Blue
     ],
-    # 5. 💥 Crowd Hype — Discord spike trigger, random explosions
-    "crowd_hype": [
-        BrightnessCommand(brightness=200),
-        EffectCommand(name="fireworks", speed=200, intensity=220, brightness=200),
+    # 🧘 Zen of Python — slow meditative breathe in Blue/Gold
+    "zen": [
+        EffectCommand(name="breathe", color=RGB(r=55, g=118, b=171), speed=30, brightness=120), # Python Blue
+        ColorCommand(color=RGB(r=255, g=212, b=59), brightness=60), # Python Gold (layered via colors)
     ],
-    # 6. 🤠 Howdy — registration / check-in marquee
-    "howdy": [
-        ColorCommand(color=RGB(r=26, g=10, b=0), brightness=160),  # dark leather BG
-        TextCommand(
-            text="PyTexas 2026",
-            color=RGB(r=255, g=255, b=255),
-            speed=160,
-        ),
+
+    # ── The "PyTexas" Flair ─────────────────────────────────────────────────
+    # ❤️ Deep in the Heart — pulsing red center-out ripple (heartbeat)
+    "deep_heart": [
+        EffectCommand(name="ripple", color=RGB(r=255, g=0, b=0), speed=80, intensity=255, brightness=200),
     ],
-    # 7. ❤️ Love It — 💥 replacement with hearts and red text
-    "love_it": [
-        BrightnessCommand(brightness=200),
-        TextCommand(
-            text="❤️❤️❤️ Love it ❤️❤️❤️",
-            color=RGB(r=255, g=0, b=0),
-            speed=160,
-        ),
+    # 🪻 Bluebonnet Field — vibrant blues/purples
+    "bluebonnets": [
+        EffectCommand(name="plasma", color=RGB(r=0, g=0, b=255), speed=20, intensity=120, brightness=100),
     ],
-    # 8. 🌈 Pride Ride — Saturday rooftop party
-    "pride_ride": [
-        EffectCommand(name="pride", speed=80, intensity=128, brightness=180),
+    # 🌹 The Yellow Rose — blooming yellow effect
+    "yellow_rose": [
+        EffectCommand(name="ripple", color=RGB(r=255, g=212, b=59), speed=60, intensity=180, brightness=180),
     ],
-    # 9. 🌊 Sine Wave — smooth Python-colored transition effect
-    "sine_wave": [
-        EffectCommand(
-            name="wavingcell",
-            color=RGB(r=75, g=139, b=190),   # Python blue (#4B8BBE)
-            speed=100,
-            intensity=140,
-            brightness=160,
-        ),
+    # 🌾 Tumbleweed — rolling amber ball
+    "tumbleweed": [
+        EffectCommand(name="meteor", color=RGB(r=255, g=191, b=0), speed=250), # fast amber meteor
     ],
-    # 10. ⚡ Discord Alert — 1-2 sec visual ack before switching to requested effect
+
+    # ── Developer Humor & Lore ──────────────────────────────────────────────
+    # 🚨 Production is Down — aggressive strobe red
+    "prod_down": [
+        EffectCommand(name="police", color=RGB(r=255, g=0, b=0), speed=255, intensity=255),
+    ],
+    # ⚔️ Merge Conflict — Red/Green collision
+    "merge_conflict": [
+        EffectCommand(name="police", color=RGB(r=255, g=0, b=0), speed=200, intensity=100),
+        EffectCommand(name="police", color=RGB(r=0, g=200, b=0), speed=205, intensity=110),
+    ],
+    # 🔢 Off-by-One Error — entire 64x8 grid lit except the last pixel
+    "off_by_one": [
+        ColorCommand(color=RGB(r=255, g=255, b=255), brightness=100, start=0, stop=511), # 511 of 512
+    ],
+    # 🧹 Garbage Collector — sweep effect clearing static
+    "garbage_collector": [
+        EffectCommand(name="noise", color=RGB(r=50, g=50, b=50), speed=255, brightness=100),
+        EffectCommand(name="sweep", color=RGB(r=0, g=200, b=0), speed=180, intensity=128),
+    ],
+    # 🍳 Spam & Eggs — pink and yellow alternating
+    "spam_eggs": [
+        EffectCommand(name="theater", color=RGB(r=255, g=120, b=180), speed=120), # Pink
+        EffectCommand(name="theater", color=RGB(r=255, g=212, b=59), speed=125),  # Yellow
+    ],
+
+    # ── Matrix Visuals ──────────────────────────────────────────────────────
+    # 🤖 Borg Assimilation — horizontal Matrix (green)
+    "borg": [
+        EffectCommand(name="matrix", color=RGB(r=0, g=200, b=0), speed=200, intensity=200),
+    ],
+    # 📏 Pep 8 Check — green scroll with red blip
+    "pep8": [
+        EffectCommand(name="sweep", color=RGB(r=0, g=200, b=0), speed=100),
+        EffectCommand(name="blink", color=RGB(r=255, g=0, b=0), speed=10, start=32, stop=33),
+    ],
+    # 🔄 Asyncio Loop — moving loading spinner
+    "asyncio_loop": [
+        EffectCommand(name="theater", color=RGB(r=0, g=200, b=200), speed=255, intensity=10),
+    ],
+    # 🦆 Duck Typer — yellow sparkle dots
+    "duck_typer": [
+        EffectCommand(name="sparkle", color=RGB(r=255, g=212, b=59), speed=200, intensity=255),
+    ],
     "discord_alert": [
         EffectCommand(
             name="blink",
-            color=RGB(r=88, g=101, b=242),   # Discord purple (#5865F2)
+            color=RGB(r=88, g=101, b=242),   # Discord purple
             speed=255,
             intensity=255,
             brightness=200,
-        ),
-    ],
-    # 11. 🌙 Late Night — Saturday night social, slow cosmic chill
-    "late_night": [
-        EffectCommand(
-            name="metaballs",
-            color=RGB(r=75, g=0, b=130),     # deep purple (#4B0082)
-            speed=60,
-            intensity=100,
-            brightness=120,
         ),
     ],
 }
