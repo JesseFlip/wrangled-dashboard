@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Any
 
 from tinydb import Query, TinyDB
-from tinydb.middlewares import CachingMiddleware
 from tinydb.storages import JSONStorage
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class ModerationStore:
             data_dir.mkdir(parents=True, exist_ok=True)
             db_path = data_dir / "moderation.db.json"
         self._lock = threading.Lock()
-        self._db = TinyDB(str(db_path), storage=CachingMiddleware(JSONStorage))
+        self._db = TinyDB(str(db_path), storage=JSONStorage)
         self._config = self._db.table("config")
         self._device_locks = self._db.table("device_locks")
         self._banned = self._db.table("banned_users")
