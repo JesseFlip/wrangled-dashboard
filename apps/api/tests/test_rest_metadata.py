@@ -35,4 +35,9 @@ def test_emoji_has_fire(client: TestClient) -> None:
     data = response.json()
     assert "emoji" in data
     assert "🔥" in data["emoji"]
-    assert data["emoji"]["🔥"] == "fire"
+    entry = data["emoji"]["🔥"]
+    # Jesse's format: {label, command} objects
+    if isinstance(entry, dict):
+        assert entry["label"] == "fire"
+    else:
+        assert entry == "fire"

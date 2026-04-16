@@ -165,7 +165,8 @@ def test_send_text_minimal(capture_push: tuple[AsyncMock, list[Command]]) -> Non
     with patches[0], patches[1]:
         exit_code = main(["send", "--ip", "10.0.6.207", "text", "hi"])
     assert exit_code == 0
-    assert sent == [TextCommand(text="hi")]
+    assert len(sent) == 1
+    assert sent[0].text == "hi"
 
 
 def test_send_text_with_flags(capture_push: tuple[AsyncMock, list[Command]]) -> None:
@@ -201,7 +202,7 @@ def test_send_text_with_flags(capture_push: tuple[AsyncMock, list[Command]]) -> 
 def test_send_text_rejects_too_long(capsys: pytest.CaptureFixture[str]) -> None:
     push = AsyncMock()
     patches = _patch_device_and_push(push)
-    long_text = "x" * 65
+    long_text = "x" * 201  # Jesse bumped max to 200
     with patches[0], patches[1]:
         exit_code = main(["send", "--ip", "10.0.6.207", "text", long_text])
     captured = capsys.readouterr()

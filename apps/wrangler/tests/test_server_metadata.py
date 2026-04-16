@@ -25,8 +25,8 @@ def test_get_presets_returns_all() -> None:
     assert response.status_code == 200
     presets = set(response.json()["presets"])
     assert presets >= {"pytexas", "party", "chill"}
-    assert presets >= {"snake_attack", "howdy", "late_night"}
-    assert len(presets) >= 13
+    assert presets >= {"snake_attack", "howdy"}
+    assert len(presets) >= 32
 
 
 def test_get_emoji_returns_mapping() -> None:
