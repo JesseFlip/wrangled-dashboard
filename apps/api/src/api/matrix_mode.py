@@ -51,9 +51,11 @@ class MatrixModeManager:
         return {"mode": self._mode, **self._config}
 
     def update_config(self, **kwargs: Any) -> dict[str, Any]:
-        """Update config without changing mode. Forces a re-push on next tick."""
+        """Update config without changing mode. Forces an immediate re-push."""
         self._config.update(kwargs)
-        self._last_pushed_text = None  # force re-push with new config
+        # Force immediate re-push by restarting the loop
+        # (clearing _last_pushed_text alone isn't enough if tick interval is long)
+        self._restart_loop()
         return self.config
 
     def set_mode(self, mode: str, **kwargs: Any) -> dict[str, Any]:
