@@ -119,4 +119,27 @@ def build_mod_router(mod: ModerationStore, hub: Hub, auth: AuthChecker, event_bu
         mod.unban_user(user_id)
         return {"ok": True}
 
+    # Quick texts (persisted canned messages)
+    @router.get("/quick-texts")
+    def list_quick_texts() -> dict:
+        return {"texts": mod.list_quick_texts()}
+
+    @router.post("/quick-texts")
+    def add_quick_text(body: dict) -> dict:
+        return {"texts": mod.add_quick_text(body.get("text", ""))}
+
+    @router.delete("/quick-texts/{text}")
+    def remove_quick_text(text: str) -> dict:
+        return {"texts": mod.remove_quick_text(text)}
+
+    # Device group tags
+    @router.get("/device-groups")
+    def list_device_groups() -> dict:
+        return {"groups": mod.list_device_groups()}
+
+    @router.put("/device-groups/{mac}")
+    def set_device_group(mac: str, body: dict) -> dict:
+        mod.set_device_group(mac, body.get("group", ""))
+        return {"ok": True}
+
     return router

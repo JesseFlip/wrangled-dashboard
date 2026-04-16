@@ -46,9 +46,10 @@ export default function App() {
 
     async function poll() {
       try {
-        const [devicesRes, healthRes] = await Promise.allSettled([
+        const [devicesRes, healthRes, dgRes] = await Promise.allSettled([
           api.listDevices(),
           fetch('/healthz').then((r) => r.json()),
+          api.listDeviceGroups(),
         ]);
 
         if (cancelled) return;
@@ -57,10 +58,11 @@ export default function App() {
           const devices = devicesRes.value?.devices ?? [];
           setDeviceCount(devices.length);
 
-          // Derive groups from device tags if available, fallback to ['all']
+          // Derive groups from persisted device group tags
+          const dgs = dgRes.status === 'fulfilled' ? (dgRes.value?.groups ?? []) : [];
           const tagSet = new Set(['all']);
-          for (const d of devices) {
-            if (d.group) tagSet.add(d.group);
+          for (const dg of dgs) {
+            if (dg.group) tagSet.add(dg.group);
           }
           setGroups([...tagSet]);
         }

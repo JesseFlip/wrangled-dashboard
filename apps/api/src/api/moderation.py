@@ -63,6 +63,8 @@ class ModerationStore:
         self._banned = self._db.table("banned_users")
         self._log = self._db.table("command_log")
         self._rates = self._db.table("rate_limits")
+        self._quick_texts = self._db.table("quick_texts")
+        self._device_groups = self._db.table("device_groups")
         self._ensure_config()
 
     def _read(self, fn):  # noqa: ANN001, ANN202
@@ -268,3 +270,43 @@ class ModerationStore:
             command_kind="emergency_off",
             detail="All devices powered off, bot paused",
         )
+
+    # ── Quick texts (persisted) ──────────────────────────────────────
+
+    def list_quick_texts(self) -> list[str]:
+        with self._lock:
+            docs = self._quick_texts.all()
+        return [d["text"] for d in docs]
+
+    def add_quick_text(self, text: str) -> list[str]:
+        with self._lock:
+            q = Query()
+            if not self._quick_texts.search(q.text == text):
+                self._quick_texts.insert({"text": text})
+        return self.list_quick_texts()
+
+    def remove_quick_text(self, text: str) -> list[str]:
+        with self._lock:
+            q = Query()
+            self._quick_texts.remove(q.text == text)
+        return self.list_quick_texts()
+
+    # ── Device groups (persisted) ────────────────────────────────────
+
+    def list_device_groups(self) -> list[dict]:
+        with self._lock:
+            return self._device_groups.all()
+
+    def set_device_group(self, mac: str, group: str) -> None:
+        with self._lock:
+            q = Query()
+            if self._device_groups.search(q.mac == mac):
+                self._device_groups.update({"group": group}, q.mac == mac)
+            else:
+                self._device_groups.insert({"mac": mac, "group": group})
+
+    def get_device_group(self, mac: str) -> str | None:
+        with self._lock:
+            q = Query()
+            results = self._device_groups.search(q.mac == mac)
+            return results[0]["group"] if results else None

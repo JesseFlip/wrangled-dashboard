@@ -1238,3 +1238,17 @@ input, select, textarea {
   border: 3px solid white;
   box-shadow: var(--shadow-md);
 }
+
+/* Quick text chip with remove */
+.canned-chip-wrap { display: inline-flex; align-items: center; gap: 0; }
+.canned-chip-wrap .canned-chip { border-radius: var(--radius-full) 0 0 var(--radius-full); padding-right: var(--sp-1); }
+.canned-chip-remove {
+  background: var(--surface-3);
+  border: none;
+  color: var(--danger);
+  font-size: var(--text-sm);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  cursor: pointer;
+  line-height: 1;
+}

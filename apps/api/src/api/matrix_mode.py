@@ -83,7 +83,23 @@ class MatrixModeManager:
         )
 
         self._restart_loop()
+
+        # Idle means blank the displays
+        if mode == "idle":
+            asyncio.ensure_future(self._blank_all())
+
         return self.config
+
+    async def _blank_all(self) -> None:
+        """Send solid black to all devices (blank the screen)."""
+        from wrangled_contracts import ColorCommand  # noqa: PLC0415
+
+        cmd = ColorCommand(color={"r": 0, "g": 0, "b": 0})
+        for device in self._hub.all_devices():
+            try:
+                await self._hub.send_command(device.mac, cmd, timeout=3.0)
+            except Exception:  # noqa: BLE001
+                pass
 
     def _restart_loop(self) -> None:
         if self._task is not None:
@@ -204,7 +220,7 @@ class MatrixModeManager:
                 logger.debug("mode push failed for %s", device.mac)
 
     async def _countdown_finished(self) -> None:
-        """Fire fireworks effect for 10s, then switch to idle."""
+        """Fire fireworks effect for 10s, then blank and go idle."""
         from wrangled_contracts import EffectCommand  # noqa: PLC0415
 
         logger.info("countdown finished — firing fireworks")
@@ -215,4 +231,9 @@ class MatrixModeManager:
             except Exception:  # noqa: BLE001
                 pass
         await asyncio.sleep(10)
-        self.set_mode("idle")
+        # Go idle: blank screens, stop loop (don't call set_mode from inside _run)
+        self._mode = "idle"
+        self._config = {}
+        self._countdown_end = None
+        self._task = None  # this task is about to return
+        await self._blank_all()

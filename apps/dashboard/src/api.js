@@ -62,6 +62,19 @@ export const api = {
   })),
   modUnban: async (userId) => jsonOrThrow(await fetch(`/api/mod/banned/${encodeURIComponent(userId)}`, { method: 'DELETE', headers: getHeaders() })),
 
+  // Quick texts (persisted canned messages)
+  listQuickTexts: async () => jsonOrThrow(await fetch('/api/mod/quick-texts', { headers: getHeaders() })),
+  addQuickText: async (text) => jsonOrThrow(await fetch('/api/mod/quick-texts', {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify({ text }),
+  })),
+  removeQuickText: async (text) => jsonOrThrow(await fetch(`/api/mod/quick-texts/${encodeURIComponent(text)}`, { method: 'DELETE', headers: getHeaders() })),
+
+  // Device group tags
+  listDeviceGroups: async () => jsonOrThrow(await fetch('/api/mod/device-groups', { headers: getHeaders() })),
+  setDeviceGroup: async (mac, group) => jsonOrThrow(await fetch(`/api/mod/device-groups/${encodeURIComponent(mac)}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify({ group }),
+  })),
+
   // Groups
   listGroups: async () => jsonOrThrow(await fetch('/api/groups', { headers: getHeaders() })),
   createGroup: async (name, macs) => jsonOrThrow(await fetch('/api/groups', {
@@ -74,14 +87,15 @@ export const api = {
    * "all" fetches all devices. Otherwise resolves group MACs.
    */
   broadcastCommand: async (group, command) => {
+    const { devices } = await api.listDevices();
     let macs;
     if (group === 'all') {
-      const { devices } = await api.listDevices();
       macs = devices.map((d) => d.mac);
     } else {
-      const { groups } = await api.listGroups();
-      const g = groups.find((gr) => gr.name === group);
-      macs = g ? g.macs : [];
+      // Check persisted device group tags
+      const dgs = await api.listDeviceGroups().catch(() => ({ groups: [] }));
+      const taggedMacs = (dgs.groups || []).filter((g) => g.group === group).map((g) => g.mac);
+      macs = taggedMacs.length > 0 ? taggedMacs : [];
     }
     let ok = 0;
     let failed = 0;

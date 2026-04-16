@@ -1,12 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
-
-const CANNED_MESSAGES = [
-  'Welcome to PyTexas!',
-  'Break - back soon',
-  'Thanks for coming!',
-  'Q&A time',
-];
 
 function hexToRgb(hex) {
   const result = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -21,6 +14,11 @@ function hexToRgb(hex) {
 export default function TextView({ group, color, brightness, onCommandSent }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [quickTexts, setQuickTexts] = useState([]);
+
+  useEffect(() => {
+    api.listQuickTexts().then((r) => setQuickTexts(r.texts || [])).catch(() => {});
+  }, []);
 
   const sendMessage = useCallback(async (msg) => {
     const trimmed = msg.trim();
@@ -44,6 +42,19 @@ export default function TextView({ group, color, brightness, onCommandSent }) {
     }
   }, [group, color, brightness, onCommandSent]);
 
+  const addQuickText = async () => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const r = await api.addQuickText(trimmed).catch(() => null);
+    if (r) setQuickTexts(r.texts || []);
+    setText('');
+  };
+
+  const removeQuickText = async (msg) => {
+    const r = await api.removeQuickText(msg).catch(() => null);
+    if (r) setQuickTexts(r.texts || []);
+  };
+
   return (
     <div className="command-view">
       <section className="command-section">
@@ -65,21 +76,39 @@ export default function TextView({ group, color, brightness, onCommandSent }) {
             SEND
           </button>
         </div>
+        {text.trim() && (
+          <button className="canned-chip" style={{ marginTop: 'var(--sp-1)' }} onClick={addQuickText}>
+            + Save as quick text
+          </button>
+        )}
       </section>
 
       <section className="command-section">
         <div className="section-label">Quick Messages</div>
         <div className="canned-chips">
-          {CANNED_MESSAGES.map((msg) => (
-            <button
-              key={msg}
-              className="canned-chip"
-              disabled={sending}
-              onClick={() => sendMessage(msg)}
-            >
-              {msg}
-            </button>
+          {quickTexts.map((msg) => (
+            <span key={msg} className="canned-chip-wrap">
+              <button
+                className="canned-chip"
+                disabled={sending}
+                onClick={() => sendMessage(msg)}
+              >
+                {msg}
+              </button>
+              <button
+                className="canned-chip-remove"
+                onClick={() => removeQuickText(msg)}
+                title="Remove"
+              >
+                ×
+              </button>
+            </span>
           ))}
+          {quickTexts.length === 0 && (
+            <span style={{ color: 'var(--text-disabled)', fontSize: 'var(--text-xs)' }}>
+              Type a message above and tap &quot;Save as quick text&quot;
+            </span>
+          )}
         </div>
       </section>
     </div>

@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
 async function loadSettings() {
-  const [cfg, lks] = await Promise.all([
+  const [cfg, lks, devs, dg] = await Promise.all([
     api.modConfig(),
     api.modDeviceLocks(),
+    api.listDevices(),
+    api.listDeviceGroups(),
   ]);
-  return { config: cfg, locks: lks };
+  return { config: cfg, locks: lks, devices: devs?.devices ?? [], deviceGroups: dg?.groups ?? [] };
 }
 
 export default function SettingsSheet({ open, onClose }) {
   const [config, setConfig] = useState(null);
   const [locks, setLocks] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [deviceGroups, setDeviceGroups] = useState([]);
   const [error, setError] = useState(null);
   useEffect(() => {
     if (!open) return;
@@ -21,6 +25,8 @@ export default function SettingsSheet({ open, onClose }) {
         if (cancelled) return;
         setConfig(data.config);
         setLocks(data.locks);
+        setDevices(data.devices);
+        setDeviceGroups(data.deviceGroups);
         setError(null);
       })
       .catch((err) => {
@@ -127,6 +133,42 @@ export default function SettingsSheet({ open, onClose }) {
                 onChange={(e) => updateConfig({ cooldown_seconds: parseInt(e.target.value, 10) || 0 })}
               />
             </div>
+
+            {devices.length > 0 && (
+              <>
+                <div style={{
+                  marginTop: 'var(--sp-4)',
+                  marginBottom: 'var(--sp-2)',
+                  fontSize: 'var(--text-xs)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'var(--text-secondary)',
+                }}>
+                  Device Groups
+                </div>
+                {devices.map((d) => {
+                  const dg = deviceGroups.find((g) => g.mac === d.mac);
+                  const currentGroup = dg?.group || '';
+                  return (
+                    <div key={d.mac} className="settings-row" style={{ cursor: 'default' }}>
+                      <span style={{ fontSize: 'var(--text-xs)' }}>{d.name}</span>
+                      <input
+                        className="settings-num"
+                        style={{ width: 80 }}
+                        placeholder="group"
+                        value={currentGroup}
+                        onChange={async (e) => {
+                          const g = e.target.value;
+                          await api.setDeviceGroup(d.mac, g).catch(() => {});
+                          const dgs = await api.listDeviceGroups().catch(() => ({ groups: [] }));
+                          setDeviceGroups(dgs.groups || []);
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </>
+            )}
 
             {locks.length > 0 && (
               <>
