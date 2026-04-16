@@ -99,6 +99,11 @@ def create_app(
             if task is not None:
                 task.cancel()
 
+    @app.on_event("shutdown")
+    async def _close_mod_db() -> None:
+        mod.close()
+        logger.info("moderation db flushed and closed")
+
     static_dir = Path(__file__).resolve().parents[3] / "static" / "dashboard"
     if static_dir.is_dir():
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="dashboard")
