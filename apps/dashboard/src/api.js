@@ -31,6 +31,18 @@ export const api = {
   listEmoji: async () => jsonOrThrow(await fetch('/api/emoji', { headers: getHeaders() })),
   listWranglers: async () => jsonOrThrow(await fetch('/api/wranglers', { headers: getHeaders() })),
 
+  // Matrix mode
+  getMode: async () => jsonOrThrow(await fetch('/api/mode', { headers: getHeaders() })),
+  setMode: async (body) => jsonOrThrow(await fetch('/api/mode', {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(body),
+  })),
+  goIdle: async () => jsonOrThrow(await fetch('/api/mode/idle', { method: 'POST', headers: getHeaders() })),
+
+  // Schedule
+  listSchedule: async () => jsonOrThrow(await fetch('/api/schedule/all', { headers: getHeaders() })),
+  getCurrentSession: async () => jsonOrThrow(await fetch('/api/schedule/current', { headers: getHeaders() })),
+  getNextSession: async () => jsonOrThrow(await fetch('/api/schedule/next', { headers: getHeaders() })),
+
   // Moderation
   modConfig: async () => jsonOrThrow(await fetch('/api/mod/config', { headers: getHeaders() })),
   modUpdateConfig: async (updates) => jsonOrThrow(await fetch('/api/mod/config', {

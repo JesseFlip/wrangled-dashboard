@@ -1,0 +1,182 @@
+# ruff: noqa: ANN401, PLC0415, SIM105, S110
+"""Matrix mode — background task that autonomously drives the matrix.
+
+Modes:
+- idle:              no auto-push (default)
+- clock:             shows current time
+- countdown_to:      counts down to a target datetime
+- countdown_minutes: counts down N minutes from activation
+- schedule:          auto-shows current/next talk from conference data
+"""
+
+from __future__ import annotations
+
+# ruff: noqa: ANN401, PLC0415, SIM105, S110
+import asyncio
+import logging
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING, Any
+
+from wrangled_contracts import TextCommand
+
+from api.schedule_logic import get_current_session, get_next_session
+
+if TYPE_CHECKING:
+    from api.server.hub import Hub
+
+logger = logging.getLogger(__name__)
+
+_TICK_SECONDS = 10  # how often to re-push text to the matrix
+
+
+class MatrixModeManager:
+    """Runs a background loop that pushes text commands based on the active mode."""
+
+    def __init__(self, hub: Hub, mod: Any) -> None:
+        self._hub = hub
+        self._mod = mod
+        self._mode: str = "idle"
+        self._config: dict[str, Any] = {}
+        self._task: asyncio.Task | None = None
+        self._countdown_end: datetime | None = None
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    @property
+    def config(self) -> dict[str, Any]:
+        return {"mode": self._mode, **self._config}
+
+    def set_mode(self, mode: str, **kwargs: Any) -> dict[str, Any]:
+        """Switch mode. Restarts the background loop."""
+        self._mode = mode
+        self._config = dict(kwargs)
+
+        if mode == "countdown_minutes":
+            minutes = int(kwargs.get("minutes", 5))
+            self._countdown_end = datetime.now(tz=UTC) + timedelta(minutes=minutes)
+            self._config["countdown_end"] = self._countdown_end.isoformat()
+        elif mode == "countdown_to":
+            target = kwargs.get("target")
+            if target:
+                self._countdown_end = datetime.fromisoformat(target)
+                self._config["countdown_end"] = self._countdown_end.isoformat()
+        else:
+            self._countdown_end = None
+
+        # Log mode change
+        self._mod.log_command(
+            who="admin",
+            source="api-ui",
+            device_mac="*",
+            command_kind=f"mode:{mode}",
+            detail=str(self._config)[:200],
+        )
+
+        self._restart_loop()
+        return self.config
+
+    def _restart_loop(self) -> None:
+        if self._task is not None:
+            self._task.cancel()
+            self._task = None
+        if self._mode != "idle":
+            self._task = asyncio.create_task(self._run())
+
+    async def start(self) -> None:
+        """Called on app startup."""
+        if self._mode != "idle":
+            self._restart_loop()
+
+    async def stop(self) -> None:
+        """Called on app shutdown."""
+        if self._task is not None:
+            self._task.cancel()
+
+    async def _run(self) -> None:
+        """Background loop — pushes text to all devices every _TICK_SECONDS."""
+        try:
+            while True:
+                text = self._generate_text()
+                if text:
+                    await self._push_text(text)
+                await asyncio.sleep(_TICK_SECONDS)
+        except asyncio.CancelledError:
+            return
+        except Exception:
+            logger.exception("matrix mode loop crashed")
+
+    def _generate_text(self) -> str | None:
+        """Generate the text to display based on current mode."""
+        if self._mode == "clock":
+            return self._gen_clock()
+        if self._mode in ("countdown_to", "countdown_minutes"):
+            return self._gen_countdown()
+        if self._mode == "schedule":
+            return self._gen_schedule()
+        return None
+
+    def _gen_clock(self) -> str:
+        now = datetime.now(tz=UTC)
+        # Convert to local-ish time (CDT = UTC-5 for Austin)
+        local = now - timedelta(hours=5)
+        return local.strftime("%I:%M %p").lstrip("0")
+
+    def _gen_countdown(self) -> str | None:
+        if self._countdown_end is None:
+            return None
+        now = datetime.now(tz=UTC)
+        remaining = self._countdown_end - now
+        if remaining.total_seconds() <= 0:
+            return "TIME!"
+        total_secs = int(remaining.total_seconds())
+        hours, remainder = divmod(total_secs, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            return f"T-{hours}:{minutes:02d}:{seconds:02d}"
+        return f"T-{minutes}:{seconds:02d}"
+
+    def _gen_schedule(self) -> str | None:
+        current = get_current_session()
+        if current:
+            session, _time_str = current
+            text = session.get("title", "")
+            speaker = session.get("speaker", "")
+            if speaker:
+                text = f"{text} - {speaker}"
+            return text
+
+        _next_session, next_time = get_next_session()
+        if _next_session:
+            title = _next_session.get("title", "")
+            return f"Up next at {next_time}: {title}"
+
+        return "PyTexas 2026"
+
+    async def _push_text(self, text: str) -> None:
+        """Send a TextCommand to every connected device via the hub."""
+        color_cfg = self._config.get("color", {"r": 255, "g": 255, "b": 255})
+        speed = self._config.get("speed", 20)
+        brightness = self._config.get("brightness")
+
+        cmd = TextCommand(
+            text=text[:200],
+            color=color_cfg if isinstance(color_cfg, dict) else None,
+            speed=speed,
+        )
+        if brightness is not None:
+            from wrangled_contracts import BrightnessCommand
+
+            bri_cmd = BrightnessCommand(brightness=min(int(brightness), 200))
+            for device in self._hub.all_devices():
+                try:
+                    await self._hub.send_command(device.mac, bri_cmd, timeout=3.0)
+                except Exception:  # noqa: BLE001
+                    pass
+
+        for device in self._hub.all_devices():
+            try:
+                await self._hub.send_command(device.mac, cmd, timeout=3.0)
+            except Exception:  # noqa: BLE001
+                logger.debug("mode push failed for %s", device.mac)

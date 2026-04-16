@@ -31,7 +31,8 @@ if TYPE_CHECKING:
 
 
 def _summarize(cmd: Command) -> str:
-    from wrangled_contracts import PresetCommand, TextCommand
+    from wrangled_contracts import PresetCommand, TextCommand  # noqa: PLC0415
+
     if isinstance(cmd, EffectCommand):
         return cmd.name
     if isinstance(cmd, ColorCommand):
@@ -64,10 +65,7 @@ def build_metadata_router() -> APIRouter:
     @router.get("/emoji")
     def list_emoji() -> dict[str, dict[str, dict]]:
         return {
-            "emoji": {
-                k: {"label": _summarize(v), "command": v}
-                for k, v in EMOJI_COMMANDS.items()
-            }
+            "emoji": {k: {"label": _summarize(v), "command": v} for k, v in EMOJI_COMMANDS.items()}
         }
 
     return router

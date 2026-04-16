@@ -4,12 +4,13 @@ import EffectTab from './EffectTab.jsx';
 import TextTab from './TextTab.jsx';
 import PresetTab from './PresetTab.jsx';
 import EmojiTab from './EmojiTab.jsx';
+import ScheduleTab from './ScheduleTab.jsx';
 import BrightnessSlider from './BrightnessSlider.jsx';
 
-const TABS = ['Color', 'Effect', 'Text', 'Preset', 'Emoji'];
+const TABS = ['Schedule', 'Color', 'Effect', 'Text', 'Preset', 'Emoji'];
 
 export default function ControlPanel({ onSend, applyToAll, onToggleAll }) {
-  const [tab, setTab] = useState('Color');
+  const [tab, setTab] = useState('Schedule');
 
   return (
     <div className="control-surface">
@@ -25,6 +26,7 @@ export default function ControlPanel({ onSend, applyToAll, onToggleAll }) {
         ))}
       </nav>
       <div className="tab-panel">
+        {tab === 'Schedule' && <ScheduleTab onSend={onSend} />}
         {tab === 'Color' && <ColorTab onSend={onSend} />}
         {tab === 'Effect' && <EffectTab onSend={onSend} />}
         {tab === 'Text' && <TextTab onSend={onSend} />}

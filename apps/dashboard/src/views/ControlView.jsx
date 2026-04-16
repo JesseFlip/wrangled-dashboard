@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import DeviceGrid from '../components/DeviceGrid.jsx';
 import ControlPanel from '../components/ControlPanel.jsx';
+import ModePanel from '../components/ModePanel.jsx';
 import SystemFooter from '../components/SystemFooter.jsx';
 import { api } from '../api.js';
 
@@ -33,6 +34,9 @@ export default function ControlView() {
         onSelect={setSelectedMac}
         onDevicesLoaded={setDevices}
       />
+      <div style={{ padding: '0 var(--sp-4)' }}>
+        <ModePanel />
+      </div>
       {(selectedMac || applyToAll) && (
         <div style={{ padding: '0 var(--sp-4)' }}>
           <ControlPanel

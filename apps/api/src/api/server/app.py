@@ -11,11 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from api import __version__
+from api.matrix_mode import MatrixModeManager
 from api.moderation import ModerationStore
 from api.server.auth import AuthChecker
 from api.server.hub import Hub
 from api.server.mod_routes import build_mod_router
+from api.server.mode_routes import build_mode_router
 from api.server.rest import build_metadata_router, build_rest_router
+from api.server.schedule import build_schedule_router
 from api.server.ws import build_ws_router
 
 logger = logging.getLogger(__name__)
@@ -40,9 +43,11 @@ def create_app(
     checker = AuthChecker(auth_token)
     hub = Hub()
     mod = mod_store or ModerationStore()
+    mode_mgr = MatrixModeManager(hub, mod)
     app.state.auth_checker = checker
     app.state.hub = hub
     app.state.mod = mod
+    app.state.mode_mgr = mode_mgr
 
     @app.get("/healthz")
     def healthz() -> dict[str, object]:
@@ -51,12 +56,23 @@ def create_app(
             "wranglers": len(hub.wranglers_summary()),
             "discord": discord_token is not None,
             "bot_paused": mod.bot_paused,
+            "matrix_mode": mode_mgr.mode,
         }
 
     app.include_router(build_ws_router(hub, checker))
     app.include_router(build_rest_router(hub, checker, mod))
     app.include_router(build_metadata_router())
     app.include_router(build_mod_router(mod, hub, checker))
+    app.include_router(build_schedule_router())
+    app.include_router(build_mode_router(mode_mgr, checker))
+
+    @app.on_event("startup")
+    async def _start_mode_mgr() -> None:
+        await mode_mgr.start()
+
+    @app.on_event("shutdown")
+    async def _stop_mode_mgr() -> None:
+        await mode_mgr.stop()
 
     if discord_token:
 
