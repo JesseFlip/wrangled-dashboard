@@ -14,6 +14,7 @@ from api import __version__
 from api.matrix_mode import MatrixModeManager
 from api.moderation import ModerationStore
 from api.server.auth import AuthChecker
+from api.server.groups import DeviceGroupStore, build_groups_router
 from api.server.hub import Hub
 from api.server.mod_routes import build_mod_router
 from api.server.mode_routes import build_mode_router
@@ -46,11 +47,13 @@ def create_app(
     mod = mod_store or ModerationStore()
     mode_mgr = MatrixModeManager(hub, mod)
     event_bus = CommandEventBus()
+    group_store = DeviceGroupStore()
     app.state.auth_checker = checker
     app.state.hub = hub
     app.state.mod = mod
     app.state.mode_mgr = mode_mgr
     app.state.event_bus = event_bus
+    app.state.group_store = group_store
 
     @app.get("/healthz")
     def healthz() -> dict[str, object]:
@@ -69,6 +72,7 @@ def create_app(
     app.include_router(build_schedule_router())
     app.include_router(build_mode_router(mode_mgr, checker))
     app.include_router(build_stream_router(event_bus, checker))
+    app.include_router(build_groups_router(group_store, checker))
 
     @app.on_event("startup")
     async def _start_mode_mgr() -> None:
