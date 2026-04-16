@@ -622,3 +622,114 @@ input, select, textarea {
   display: block;
   margin-bottom: var(--sp-1);
 }
+
+/* --------------------------------------------------------------------------
+   Switches
+   -------------------------------------------------------------------------- */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--surface-3);
+  transition: .4s;
+  border-radius: var(--radius-full);
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-primary);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .switch-slider {
+  background-color: var(--accent);
+}
+
+input:focus + .switch-slider {
+  box-shadow: 0 0 1px var(--accent);
+}
+
+input:checked + .switch-slider:before {
+  transform: translateX(20px);
+  background-color: #000;
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  user-select: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Color Input Group
+   -------------------------------------------------------------------------- */
+
+.color-input-group {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  background: var(--surface-0);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--sp-1) var(--sp-2);
+  transition: border-color var(--transition-fast);
+}
+
+.color-input-group:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.input-color {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.input-color::-webkit-color-swatch-wrapper { padding: 0; }
+.input-color::-webkit-color-swatch {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.input-hex {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  width: 100%;
+  outline: none;
+}

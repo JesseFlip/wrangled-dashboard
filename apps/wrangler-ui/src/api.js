@@ -30,4 +30,7 @@ export const api = {
   listEffects: async () => jsonOrThrow(await fetch('/api/effects')),
   listPresets: async () => jsonOrThrow(await fetch('/api/presets')),
   listEmoji: async () => jsonOrThrow(await fetch('/api/emoji')),
+  listSchedule: async () => jsonOrThrow(await fetch('/api/schedule/all')),
+  getNextSession: async () => jsonOrThrow(await fetch('/api/schedule/next')),
+  getCurrentSession: async () => jsonOrThrow(await fetch('/api/schedule/current')),
 };

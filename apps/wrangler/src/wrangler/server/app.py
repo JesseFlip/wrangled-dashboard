@@ -13,6 +13,7 @@ from wrangler.hub_client import HubClient
 from wrangler.scanner import ScanOptions, scan
 from wrangler.server.devices import build_devices_router
 from wrangler.server.metadata import build_metadata_router
+from wrangler.server.schedule import build_schedule_router
 from wrangler.server.registry import Registry
 from wrangler.settings import WranglerSettings
 
@@ -42,6 +43,7 @@ def create_app(
 
     app.include_router(build_devices_router(reg))
     app.include_router(build_metadata_router())
+    app.include_router(build_schedule_router())
 
     hub_client: HubClient | None = None
     if settings.api_url:
