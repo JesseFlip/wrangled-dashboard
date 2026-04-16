@@ -4,6 +4,7 @@ import AuthGate from './components/AuthGate.jsx';
 import GlobalBar from './components/GlobalBar.jsx';
 import TabBar from './components/TabBar.jsx';
 import CommandView from './views/CommandView.jsx';
+import ModeView from './views/ModeView.jsx';
 import StoryView from './views/StoryView.jsx';
 import StreamView from './views/StreamView.jsx';
 import TextView from './views/TextView.jsx';
@@ -23,7 +24,7 @@ export default function App() {
   const hash = useHash();
   const isAbout = hash === '#/about';
 
-  const [tab, setTab] = useState('stream');
+  const [tab, setTab] = useState('command');
   const [group, setGroup] = useState('all');
   const [groups, setGroups] = useState(['all']);
   const [brightness, setBrightness] = useState(128);
@@ -118,9 +119,10 @@ export default function App() {
           discordActive={discordActive}
         />
         <main className="tab-content">
-          {tab === 'stream' && <StreamView group={group} />}
           {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} />}
           {tab === 'text' && <TextView group={group} color={color} brightness={brightness} />}
+          {tab === 'mode' && <ModeView />}
+          {tab === 'discord' && <StreamView group={group} />}
           {tab === 'toolkit' && (
             <ToolkitView
               group={group}

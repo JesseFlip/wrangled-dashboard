@@ -12,8 +12,6 @@ const PRESET_GRADIENTS = {
   snake_attack: 'linear-gradient(135deg, #22c55e, #84cc16)',
 };
 
-const MODE_OPTIONS = ['idle', 'clock', 'schedule', 'countdown'];
-
 function hexToRgb(hex) {
   const result = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return { r: 255, g: 128, b: 0 };
@@ -36,16 +34,14 @@ export default function CommandView({ group, color, brightness }) {
   const [nextSession, setNextSession] = useState(null);
   const [nextTime, setNextTime] = useState(null);
   const [presets, setPresets] = useState([]);
-  const [mode, setMode] = useState(null);
   const [sending, setSending] = useState(false);
   const intervalRef = useRef(null);
 
   const loadData = useCallback(async () => {
-    const [curRes, nxtRes, preRes, modeRes] = await Promise.allSettled([
+    const [curRes, nxtRes, preRes] = await Promise.allSettled([
       api.getCurrentSession(),
       api.getNextSession(),
       api.listPresets(),
-      api.getMode(),
     ]);
     if (curRes.status === 'fulfilled') setCurrentSession(curRes.value.session ?? null);
     if (nxtRes.status === 'fulfilled') {
@@ -53,7 +49,6 @@ export default function CommandView({ group, color, brightness }) {
       setNextTime(nxtRes.value.next_time ?? null);
     }
     if (preRes.status === 'fulfilled') setPresets(preRes.value.presets ?? []);
-    if (modeRes.status === 'fulfilled') setMode(modeRes.value);
   }, []);
 
   useEffect(() => {
@@ -89,25 +84,6 @@ export default function CommandView({ group, color, brightness }) {
   const sendPreset = useCallback((name) => {
     broadcast({ kind: 'preset', name });
   }, [broadcast]);
-
-  const changeMode = useCallback(async (name) => {
-    setSending(true);
-    try {
-      if (name === 'idle') {
-        await api.goIdle();
-      } else {
-        await api.setMode({ mode: name });
-      }
-      const res = await api.getMode();
-      setMode(res);
-    } catch {
-      /* swallow */
-    } finally {
-      setSending(false);
-    }
-  }, []);
-
-  const activeMode = mode?.mode ?? null;
 
   return (
     <div className="command-view">
@@ -177,22 +153,6 @@ export default function CommandView({ group, color, brightness }) {
         </section>
       )}
 
-      {/* Matrix Mode */}
-      <section className="command-section">
-        <div className="card-header"><span>Matrix Mode</span></div>
-        <div className="mode-pills">
-          {MODE_OPTIONS.map((name) => (
-            <button
-              key={name}
-              className={`mode-pill${activeMode === name ? ' active' : ''}`}
-              disabled={sending}
-              onClick={() => changeMode(name)}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

@@ -1173,3 +1173,33 @@ input, select, textarea {
 .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
 .settings-row { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
 .settings-num { width: 60px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-2); color: var(--text-primary); text-align: right; font-size: var(--text-sm); }
+
+/* --------------------------------------------------------------------------
+   Mode view — countdown
+   -------------------------------------------------------------------------- */
+
+.countdown-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
+.countdown-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.countdown-btn:active { background: var(--accent); color: white; border-color: var(--accent); }
+.countdown-btn:disabled { opacity: 0.5; }
+
+.mode-status-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3);
+  background: var(--surface-1);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  color: var(--accent);
+}
