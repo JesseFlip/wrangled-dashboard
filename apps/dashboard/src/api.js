@@ -58,4 +58,58 @@ export const api = {
     method: 'POST', headers: getHeaders(), body: JSON.stringify({ user_id: userId, username, reason }),
   })),
   modUnban: async (userId) => jsonOrThrow(await fetch(`/api/mod/banned/${encodeURIComponent(userId)}`, { method: 'DELETE', headers: getHeaders() })),
+
+  // Groups
+  listGroups: async () => jsonOrThrow(await fetch('/api/groups', { headers: getHeaders() })),
+  createGroup: async (name, macs) => jsonOrThrow(await fetch('/api/groups', {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify({ name, macs }),
+  })),
+  deleteGroup: async (name) => jsonOrThrow(await fetch(`/api/groups/${encodeURIComponent(name)}`, { method: 'DELETE', headers: getHeaders() })),
+
+  /**
+   * Send a command to all devices in a group.
+   * "all" fetches all devices. Otherwise resolves group MACs.
+   */
+  broadcastCommand: async (group, command) => {
+    let macs;
+    if (group === 'all') {
+      const { devices } = await api.listDevices();
+      macs = devices.map((d) => d.mac);
+    } else {
+      const { groups } = await api.listGroups();
+      const g = groups.find((gr) => gr.name === group);
+      macs = g ? g.macs : [];
+    }
+    let ok = 0;
+    let failed = 0;
+    const errors = [];
+    for (const mac of macs) {
+      try {
+        await api.sendCommand(mac, command);
+        ok++;
+      } catch (err) {
+        failed++;
+        errors.push(`${mac}: ${err.message}`);
+      }
+    }
+    return { ok, failed, errors };
+  },
 };
+
+/**
+ * Subscribe to the SSE command stream.
+ * Returns an EventSource. Call .close() to disconnect.
+ */
+export function subscribeStream(onEvent) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const url = `/api/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  const source = new EventSource(url);
+  source.addEventListener('command', (e) => {
+    try {
+      onEvent(JSON.parse(e.data));
+    } catch {
+      // ignore parse errors
+    }
+  });
+  return source;
+}
