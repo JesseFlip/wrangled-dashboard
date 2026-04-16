@@ -1,16 +1,32 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import SettingsSheet from './SettingsSheet.jsx';
 
-const COLOR_PRESETS = [
-  '#ef4444',
-  '#f97316',
-  '#facc15',
-  '#22c55e',
-  '#3b82f6',
-  '#8b5cf6',
-  '#ec4899',
-  '#ffffff',
-];
+function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * c).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function pickColorFromEvent(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX ?? e.touches[0].clientX) - rect.left;
+  const y = (e.clientY ?? e.touches[0].clientY) - rect.top;
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const dx = x - cx;
+  const dy = y - cy;
+  const angle = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+  const dist = Math.min(Math.sqrt(dx * dx + dy * dy) / cx, 1);
+  // Hue from angle, saturation from distance, lightness fixed at 50%
+  // But near center = white (low saturation)
+  return hslToHex(angle, dist * 100, 50);
+}
 
 export default function GlobalBar({
   group,
@@ -26,6 +42,38 @@ export default function GlobalBar({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const canvasRef = useRef(null);
+
+  const drawWheel = useCallback((canvas) => {
+    if (!canvas) return;
+    canvasRef.current = canvas;
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const cx = size / 2;
+    const cy = size / 2;
+    const radius = size / 2;
+
+    for (let angle = 0; angle < 360; angle++) {
+      const startAngle = (angle - 1) * Math.PI / 180;
+      const endAngle = (angle + 1) * Math.PI / 180;
+      const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      gradient.addColorStop(0, `hsl(${angle}, 0%, 100%)`);
+      gradient.addColorStop(0.5, `hsl(${angle}, 100%, 50%)`);
+      gradient.addColorStop(1, `hsl(${angle}, 100%, 20%)`);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+  }, []);
+
+  const handleWheelClick = (e) => {
+    const hex = pickColorFromEvent(e, canvasRef.current);
+    onColorChange(hex);
+    setPickerOpen(false);
+  };
 
   return (
     <div className="global-bar">
@@ -79,22 +127,22 @@ export default function GlobalBar({
         />
       </div>
 
-      {/* Color picker swatches */}
+      {/* Color wheel overlay */}
       {pickerOpen && (
-        <div className="global-color-picker">
-          {COLOR_PRESETS.map((hex) => (
-            <button
-              key={hex}
-              className={`color-swatch ${color === hex ? 'active' : ''}`}
-              style={{ background: hex }}
-              onClick={() => {
-                onColorChange(hex);
-                setPickerOpen(false);
-              }}
+        <div className="color-wheel-overlay" onClick={() => setPickerOpen(false)}>
+          <div className="color-wheel-container" onClick={(e) => e.stopPropagation()}>
+            <canvas
+              ref={drawWheel}
+              width={280}
+              height={280}
+              className="color-wheel-canvas"
+              onClick={handleWheelClick}
             />
-          ))}
+            <div className="color-wheel-preview" style={{ background: color }} />
+          </div>
         </div>
       )}
+
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );

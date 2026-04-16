@@ -41,6 +41,7 @@ export default function ModeView() {
   }, [changeMode]);
 
   const activeMode = mode?.mode ?? null;
+  const isCountdown = activeMode?.startsWith('countdown');
 
   return (
     <div className="command-view">
@@ -57,12 +58,6 @@ export default function ModeView() {
               {name}
             </button>
           ))}
-          <button
-            className={`mode-pill${activeMode?.startsWith('countdown') ? ' active' : ''}`}
-            disabled={true}
-          >
-            countdown
-          </button>
         </div>
       </section>
 
@@ -106,12 +101,16 @@ export default function ModeView() {
         </div>
       </section>
 
-      {activeMode?.startsWith('countdown') && mode && (
+      {isCountdown && (
         <section className="command-section">
           <div className="section-label">Active Countdown</div>
           <div className="mode-status-card">
-            <span>Mode: {activeMode}</span>
-            <button className="mode-pill" onClick={() => changeMode('idle')} disabled={sending}>
+            <span>Counting down...</span>
+            <button
+              className="mode-pill active"
+              onClick={() => changeMode('idle')}
+              disabled={sending}
+            >
               Stop
             </button>
           </div>
