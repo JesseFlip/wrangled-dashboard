@@ -24,6 +24,24 @@ from wrangled_contracts import (
 
 logger = logging.getLogger(__name__)
 
+# WLED firmware hard limit on the segment 'n' (name) field used by
+# the Scrolling Text effect (FX 122). Text beyond this is silently
+# truncated by the device, causing mid-word cutoffs.
+WLED_TEXT_LIMIT = 64
+
+
+def _truncate_for_wled(text: str) -> str:
+    """Truncate text to fit WLED's 64-byte segment name limit.
+    
+    Truncates at the last word boundary to avoid mid-word cutoffs.
+    Appends '...' only when truncation occurs.
+    """
+    if len(text) <= WLED_TEXT_LIMIT:
+        return text
+    # Truncate to limit and cut at last space to avoid mid-word breaks
+    truncated = text[:WLED_TEXT_LIMIT].rsplit(' ', 1)[0]
+    return truncated + '...'
+
 
 def _rgb_triplet(color: RGB) -> list[list[int]]:
     return [[color.r, color.g, color.b], [0, 0, 0], [0, 0, 0]]
@@ -60,7 +78,7 @@ def _build_segment(cmd: Command, seg_id: int = 0) -> dict | None:
         seg = {
             "id": seg_id,
             "fx": 122,
-            "n": cmd.text,
+            "n": _truncate_for_wled(cmd.text),
             "sx": cmd.speed,
             "ix": cmd.intensity if cmd.intensity is not None else 128,
             "o1": False,
