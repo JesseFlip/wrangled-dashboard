@@ -2,7 +2,7 @@
 FROM node:22-slim AS dashboard-build
 WORKDIR /build
 COPY apps/dashboard/package.json apps/dashboard/package-lock.json apps/dashboard/
-RUN cd apps/dashboard && npm install
+RUN cd apps/dashboard && npm install --legacy-peer-deps
 COPY apps/dashboard/ apps/dashboard/
 RUN mkdir -p apps/api/static/dashboard && \
     cd apps/dashboard && npx vite build --outDir ../api/static/dashboard --emptyOutDir
