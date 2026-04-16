@@ -63,8 +63,8 @@ async def test_event_bus_publish_subscribe() -> None:
 
     event1 = CommandEvent(who="a", source="s", command_kind="k1")
     event2 = CommandEvent(who="b", source="s", command_kind="k2")
-    await bus.publish(event1)
-    await bus.publish(event2)
+    bus.publish(event1)
+    bus.publish(event2)
 
     await asyncio.wait_for(task, timeout=2.0)
     assert len(received) == 2
@@ -88,7 +88,7 @@ async def test_event_bus_multiple_subscribers() -> None:
     task_b = asyncio.create_task(_consumer(results_b))
     await asyncio.sleep(0.01)
 
-    await bus.publish(CommandEvent(who="x", source="s", command_kind="k"))
+    bus.publish(CommandEvent(who="x", source="s", command_kind="k"))
 
     await asyncio.wait_for(asyncio.gather(task_a, task_b), timeout=2.0)
     assert len(results_a) == 1
@@ -144,7 +144,7 @@ async def test_stream_endpoint_streams_events() -> None:
             assert resp.status_code == 200
 
             # Publish after connection is established
-            await bus.publish(
+            bus.publish(
                 CommandEvent(who="tester", source="test", command_kind="color"),
             )
 

@@ -45,9 +45,15 @@ class CommandEventBus:
     def __init__(self) -> None:
         self._subscribers: list[asyncio.Queue[CommandEvent]] = []
 
-    async def publish(self, event: CommandEvent) -> None:
+    def publish(self, event: CommandEvent) -> None:
+        dead: list[asyncio.Queue] = []
         for queue in list(self._subscribers):
-            await queue.put(event)
+            try:
+                queue.put_nowait(event)
+            except asyncio.QueueFull:
+                dead.append(queue)
+        for queue in dead:
+            self._subscribers.remove(queue)
 
     async def subscribe(self) -> AsyncIterator[CommandEvent]:
         queue: asyncio.Queue[CommandEvent] = asyncio.Queue()
