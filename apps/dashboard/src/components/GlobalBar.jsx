@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SettingsSheet from './SettingsSheet.jsx';
 
 const COLOR_PRESETS = [
   '#ef4444',
@@ -24,6 +25,7 @@ export default function GlobalBar({
   discordActive,
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="global-bar">
@@ -37,7 +39,7 @@ export default function GlobalBar({
             className={`global-discord-dot ${discordActive ? 'on' : 'off'}`}
             title={discordActive ? 'Discord connected' : 'Discord offline'}
           />
-          <button className="global-gear-btn" onClick={() => {}} title="Settings">
+          <button className="global-gear-btn" onClick={() => setSettingsOpen(true)} title="Settings">
             {'\u2699'}
           </button>
           <button className="global-kill-btn" onClick={onKill}>
@@ -93,6 +95,7 @@ export default function GlobalBar({
           ))}
         </div>
       )}
+      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
