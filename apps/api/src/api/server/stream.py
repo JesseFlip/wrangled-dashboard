@@ -7,11 +7,11 @@ import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Header
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from api.server.auth import AuthChecker, build_rest_auth_dep
+from api.server.auth import AuthChecker
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -65,11 +65,19 @@ class CommandEventBus:
 
 def build_stream_router(bus: CommandEventBus, auth: AuthChecker) -> APIRouter:
     """Return an APIRouter with the SSE stream endpoint."""
-    dep = build_rest_auth_dep(auth)
-    router = APIRouter(dependencies=[Depends(dep)])
+    router = APIRouter()
 
     @router.get("/api/stream")
-    async def stream() -> EventSourceResponse:
+    async def stream(
+        token: str | None = None,
+        authorization: str | None = Header(default=None),
+    ) -> EventSourceResponse:
+        # SSE EventSource can't set headers, so accept token as query param too
+        if authorization:
+            auth.check_header(authorization)
+        else:
+            auth.check_query_token(token)
+
         async def _generate() -> AsyncIterator[dict[str, str]]:
             async for event in bus.subscribe():
                 yield {"event": "command", "data": event.model_dump_json()}
