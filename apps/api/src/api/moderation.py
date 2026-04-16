@@ -235,7 +235,16 @@ class ModerationStore:
     # ── Profanity filter ──────────────────────────────────────────────
 
     def check_profanity(self, text: str) -> str | None:
-        """Return the matched pattern if profanity found, else None."""
+        """Return the matched pattern if profanity found, else None.
+
+        Uses better-profanity as the primary check, then falls back to
+        the regex blocklist from config.
+        """
+        from better_profanity import profanity
+
+        if profanity.contains_profanity(text):
+            return "profanity_detected"
+
         patterns = self.get_config().get("profanity_blocklist", [])
         for pattern in patterns:
             try:

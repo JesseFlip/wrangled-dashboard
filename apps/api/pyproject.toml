@@ -11,6 +11,7 @@ dependencies = [
     "wrangled-contracts",
     "discord.py>=2.4",
     "tinydb>=4.8",
+    "better-profanity>=0.7",
 ]
 
 [project.scripts]
