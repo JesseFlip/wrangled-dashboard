@@ -108,7 +108,9 @@ class MatrixModeManager:
             while True:
                 text = self._generate_text()
                 if text and text != self._last_pushed_text:
-                    await self._push_text(text)
+                    # Short static text (clock/countdown) shouldn't scroll
+                    no_scroll = self._mode in ("clock", "countdown_to", "countdown_minutes")
+                    await self._push_text(text, speed=0 if no_scroll else None)
                     self._last_pushed_text = text
                 await asyncio.sleep(self._tick_interval())
         except asyncio.CancelledError:
@@ -130,7 +132,10 @@ class MatrixModeManager:
         now = datetime.now(tz=UTC)
         # Convert to local-ish time (CDT = UTC-5 for Austin)
         local = now - timedelta(hours=5)
-        return local.strftime("%I:%M %p").lstrip("0")
+        h = local.hour % 12 or 12
+        m = local.strftime("%M")
+        p = "A" if local.hour < 12 else "P"
+        return f"{h}:{m}{p}"
 
     def _gen_countdown(self) -> str | None:
         if self._countdown_end is None:
@@ -163,10 +168,10 @@ class MatrixModeManager:
 
         return "PyTexas 2026"
 
-    async def _push_text(self, text: str) -> None:
+    async def _push_text(self, text: str, *, speed: int | None = None) -> None:
         """Send a TextCommand to every connected device via the hub."""
         color_cfg = self._config.get("color", {"r": 255, "g": 255, "b": 255})
-        speed = self._config.get("speed", 20)
+        speed = speed if speed is not None else self._config.get("speed", 20)
         brightness = self._config.get("brightness")
 
         cmd = TextCommand(
