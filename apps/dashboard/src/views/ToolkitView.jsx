@@ -50,6 +50,7 @@ export default function ToolkitView({ group, color, onColorChange, brightness, o
   const send = useCallback(async (command) => {
     setSending(true);
     try {
+      await api.goIdle();
       await api.broadcastCommand(group, command);
     } catch {
       // silently handle

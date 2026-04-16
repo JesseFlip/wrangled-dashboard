@@ -134,8 +134,7 @@ class MatrixModeManager:
         local = now - timedelta(hours=5)
         h = local.hour % 12 or 12
         m = local.strftime("%M")
-        p = "A" if local.hour < 12 else "P"
-        return f"{h}:{m}{p}"
+        return f"{h}:{m}"
 
     def _gen_countdown(self) -> str | None:
         if self._countdown_end is None:

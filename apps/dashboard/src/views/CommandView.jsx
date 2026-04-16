@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 
-const CANNED_MESSAGES = [
-  'Welcome to PyTexas!',
-  'Break - back soon',
-  'Thanks for coming!',
-  'Q&A time',
-];
-
 const PRESET_GRADIENTS = {
   pytexas: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
   party: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
@@ -42,7 +35,6 @@ export default function CommandView({ group, color, brightness }) {
   const [currentSession, setCurrentSession] = useState(null);
   const [nextSession, setNextSession] = useState(null);
   const [nextTime, setNextTime] = useState(null);
-  const [text, setText] = useState('');
   const [presets, setPresets] = useState([]);
   const [mode, setMode] = useState(null);
   const [sending, setSending] = useState(false);
@@ -73,6 +65,7 @@ export default function CommandView({ group, color, brightness }) {
   const broadcast = useCallback(async (command) => {
     setSending(true);
     try {
+      await api.goIdle();
       await api.broadcastCommand(group, command);
     } catch {
       /* swallow – fire and forget */
@@ -92,18 +85,6 @@ export default function CommandView({ group, color, brightness }) {
       brightness,
     });
   }, [broadcast, color, brightness]);
-
-  const sendText = useCallback(() => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    broadcast({
-      kind: 'text',
-      text: trimmed,
-      color: hexToRgb(color),
-      speed: 20,
-      brightness,
-    });
-  }, [broadcast, text, color, brightness]);
 
   const sendPreset = useCallback((name) => {
     broadcast({ kind: 'preset', name });
@@ -125,10 +106,6 @@ export default function CommandView({ group, color, brightness }) {
       setSending(false);
     }
   }, []);
-
-  const handleTextKey = useCallback((e) => {
-    if (e.key === 'Enter') sendText();
-  }, [sendText]);
 
   const activeMode = mode?.mode ?? null;
 
@@ -179,39 +156,6 @@ export default function CommandView({ group, color, brightness }) {
           </div>
         </section>
       )}
-
-      {/* Quick Text */}
-      <section className="command-section">
-        <div className="card-header"><span>Quick Text</span></div>
-        <div className="quick-text-row">
-          <input
-            className="quick-text-input"
-            type="text"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleTextKey}
-          />
-          <button
-            className="btn-accent"
-            disabled={sending || !text.trim()}
-            onClick={sendText}
-          >
-            SEND
-          </button>
-        </div>
-        <div className="canned-chips">
-          {CANNED_MESSAGES.map((msg) => (
-            <button
-              key={msg}
-              className="canned-chip"
-              onClick={() => setText(msg)}
-            >
-              {msg}
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* Presets */}
       {presets.length > 0 && (

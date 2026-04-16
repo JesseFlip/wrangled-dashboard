@@ -6,6 +6,7 @@ import TabBar from './components/TabBar.jsx';
 import CommandView from './views/CommandView.jsx';
 import StoryView from './views/StoryView.jsx';
 import StreamView from './views/StreamView.jsx';
+import TextView from './views/TextView.jsx';
 import ToolkitView from './views/ToolkitView.jsx';
 
 function useHash() {
@@ -74,7 +75,7 @@ export default function App() {
   const handleBrightnessChange = useCallback(
     (val) => {
       setBrightness(val);
-      api.sendCommand(group === 'all' ? '*' : group, { kind: 'brightness', brightness: val }).catch(() => {});
+      api.broadcastCommand(group, { kind: 'brightness', brightness: val }).catch(() => {});
     },
     [group],
   );
@@ -118,7 +119,8 @@ export default function App() {
         />
         <main className="tab-content">
           {tab === 'stream' && <StreamView group={group} />}
-          {tab === 'command' && <CommandView group={group} />}
+          {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} />}
+          {tab === 'text' && <TextView group={group} color={color} brightness={brightness} />}
           {tab === 'toolkit' && (
             <ToolkitView
               group={group}
