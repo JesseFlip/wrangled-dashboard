@@ -15,7 +15,7 @@ function hexToRgb(hex) {
   };
 }
 
-export default function ToolkitView({ group, color, onColorChange, brightness, onBrightnessChange }) {
+export default function ToolkitView({ group, color, onColorChange, brightness, onBrightnessChange, onCommandSent }) {
   const [effects, setEffects] = useState([]);
   const [emoji, setEmoji] = useState({});
   const [devices, setDevices] = useState([]);
@@ -52,12 +52,13 @@ export default function ToolkitView({ group, color, onColorChange, brightness, o
     try {
       await api.goIdle();
       await api.broadcastCommand(group, command);
+      if (onCommandSent) onCommandSent(command);
     } catch {
       // silently handle
     } finally {
       setSending(false);
     }
-  }, [group]);
+  }, [group, onCommandSent]);
 
   const handleSwatchClick = (hex) => {
     onColorChange(hex);

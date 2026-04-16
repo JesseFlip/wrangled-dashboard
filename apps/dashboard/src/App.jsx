@@ -31,6 +31,14 @@ export default function App() {
   const [color, setColor] = useState('#3b82f6');
   const [deviceCount, setDeviceCount] = useState(0);
   const [discordActive, setDiscordActive] = useState(false);
+  const lastCommandRef = useRef(null);
+
+  // Child views call this after sending a text or effect command
+  const trackCommand = useCallback((cmd) => {
+    if (cmd.kind === 'text' || cmd.kind === 'effect') {
+      lastCommandRef.current = cmd;
+    }
+  }, []);
 
   // Poll groups, devices, and health every 10s
   useEffect(() => {
@@ -122,22 +130,37 @@ export default function App() {
             const r = parseInt(hex.slice(1, 3), 16);
             const g = parseInt(hex.slice(3, 5), 16);
             const b = parseInt(hex.slice(5, 7), 16);
-            api.broadcastCommand(group, { kind: 'color', color: { r, g, b }, brightness }).catch(() => {});
+            const rgb = { r, g, b };
+            // Also update matrix mode color if a mode is active
+            api.getMode().then((m) => {
+              if (m?.mode && m.mode !== 'idle') {
+                api.setMode({ mode: m.mode, color: rgb }).catch(() => {});
+              }
+            }).catch(() => {});
+            const last = lastCommandRef.current;
+            if (last) {
+              const updated = { ...last, color: rgb, brightness };
+              api.broadcastCommand(group, updated).catch(() => {});
+              lastCommandRef.current = updated;
+            } else {
+              api.broadcastCommand(group, { kind: 'color', color: rgb, brightness }).catch(() => {});
+            }
           }}
           onKill={handleKill}
           deviceCount={deviceCount}
           discordActive={discordActive}
         />
         <main className="tab-content">
-          {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} />}
-          {tab === 'text' && <TextView group={group} color={color} brightness={brightness} />}
+          {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} onCommandSent={trackCommand} />}
+          {tab === 'text' && <TextView group={group} color={color} brightness={brightness} onCommandSent={trackCommand} />}
           {tab === 'mode' && <ModeView />}
           {tab === 'discord' && <StreamView group={group} />}
           {tab === 'toolkit' && (
             <ToolkitView
               group={group}
               color={color}
-              onColorChange={setColor}
+              onColorChange={(hex) => { setColor(hex); }}
+              onCommandSent={trackCommand}
               brightness={brightness}
               onBrightnessChange={handleBrightnessChange}
             />

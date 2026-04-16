@@ -18,7 +18,7 @@ function hexToRgb(hex) {
   };
 }
 
-export default function TextView({ group, color, brightness }) {
+export default function TextView({ group, color, brightness, onCommandSent }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -28,19 +28,21 @@ export default function TextView({ group, color, brightness }) {
     setSending(true);
     try {
       await api.goIdle();
-      await api.broadcastCommand(group, {
+      const cmd = {
         kind: 'text',
         text: trimmed,
         color: hexToRgb(color),
         speed: 20,
         brightness,
-      });
+      };
+      await api.broadcastCommand(group, cmd);
+      if (onCommandSent) onCommandSent(cmd);
     } catch {
       /* swallow */
     } finally {
       setSending(false);
     }
-  }, [group, color, brightness]);
+  }, [group, color, brightness, onCommandSent]);
 
   return (
     <div className="command-view">

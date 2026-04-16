@@ -29,7 +29,7 @@ function speakerLabel(session) {
   return session.speaker || '';
 }
 
-export default function CommandView({ group, color, brightness }) {
+export default function CommandView({ group, color, brightness, onCommandSent }) {
   const [currentSession, setCurrentSession] = useState(null);
   const [nextSession, setNextSession] = useState(null);
   const [nextTime, setNextTime] = useState(null);
@@ -62,12 +62,13 @@ export default function CommandView({ group, color, brightness }) {
     try {
       await api.goIdle();
       await api.broadcastCommand(group, command);
+      if (onCommandSent) onCommandSent(command);
     } catch {
       /* swallow – fire and forget */
     } finally {
       setSending(false);
     }
-  }, [group]);
+  }, [group, onCommandSent]);
 
   const pushSession = useCallback((session) => {
     const speaker = speakerLabel(session);
