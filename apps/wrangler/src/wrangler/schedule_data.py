@@ -35,7 +35,7 @@ CONFERENCE_DATA = {
             "desc": "Pick up your badge, grab breakfast, and get settled in."
         },
         "09:00": {
-            "title": "Day 1 Opening Remarks",
+            "title": "Day 2 Opening Remarks",
             "speaker": "PyTexas Organizers",
             "desc": "Welcome to PyTexas 2026!"
         },
@@ -139,9 +139,9 @@ CONFERENCE_DATA = {
             "desc": "Pick up your badge, grab breakfast, and get settled in for the final day."
         },
         "09:00": {
-            "title": "Day 2 Opening Remarks",
+            "title": "Day 3 Opening Remarks",
             "speaker": "PyTexas Organizers",
-            "desc": "Welcome to Day 2 of PyTexas 2026!"
+            "desc": "Welcome to Day 3 of PyTexas 2026!"
         },
         "09:20": {
             "title": "Keynote",
