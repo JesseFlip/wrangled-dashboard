@@ -19,6 +19,7 @@ from api.server.mod_routes import build_mod_router
 from api.server.mode_routes import build_mode_router
 from api.server.rest import build_metadata_router, build_rest_router
 from api.server.schedule import build_schedule_router
+from api.server.stream import CommandEventBus, build_stream_router
 from api.server.ws import build_ws_router
 
 logger = logging.getLogger(__name__)
@@ -44,10 +45,12 @@ def create_app(
     hub = Hub()
     mod = mod_store or ModerationStore()
     mode_mgr = MatrixModeManager(hub, mod)
+    event_bus = CommandEventBus()
     app.state.auth_checker = checker
     app.state.hub = hub
     app.state.mod = mod
     app.state.mode_mgr = mode_mgr
+    app.state.event_bus = event_bus
 
     @app.get("/healthz")
     def healthz() -> dict[str, object]:
@@ -65,6 +68,7 @@ def create_app(
     app.include_router(build_mod_router(mod, hub, checker))
     app.include_router(build_schedule_router())
     app.include_router(build_mode_router(mode_mgr, checker))
+    app.include_router(build_stream_router(event_bus, checker))
 
     @app.on_event("startup")
     async def _start_mode_mgr() -> None:
