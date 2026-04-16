@@ -13,6 +13,7 @@ from api.server.auth import AuthChecker, build_rest_auth_dep
 if TYPE_CHECKING:
     from api.moderation import ModerationStore
     from api.server.hub import Hub
+    from api.server.stream import CommandEventBus
 
 # ── Request bodies ────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ class LockBody(BaseModel):
 # ── Router ────────────────────────────────────────────────────────────
 
 
-def build_mod_router(mod: ModerationStore, hub: Hub, auth: AuthChecker) -> APIRouter:
+def build_mod_router(mod: ModerationStore, hub: Hub, auth: AuthChecker, event_bus: CommandEventBus | None = None) -> APIRouter:
     dep = build_rest_auth_dep(auth)
     router = APIRouter(prefix="/api/mod", dependencies=[Depends(dep)])
 
@@ -65,6 +66,13 @@ def build_mod_router(mod: ModerationStore, hub: Hub, auth: AuthChecker) -> APIRo
         for device in hub.all_devices():
             with contextlib.suppress(Exception):
                 await hub.send_command(device.mac, PowerCommand(on=False), timeout=3.0)
+        if event_bus:
+            from api.server.stream import CommandEvent  # noqa: PLC0415
+
+            event_bus.publish(CommandEvent(
+                who="admin", source="rest", command_kind="emergency_off",
+                content="All devices off, bot paused", target="all", result="ok",
+            ))
         return {"ok": True, "message": "All devices off, bot paused"}
 
     # Command history
@@ -96,6 +104,14 @@ def build_mod_router(mod: ModerationStore, hub: Hub, auth: AuthChecker) -> APIRo
     @router.post("/banned")
     def ban_user(body: BanBody) -> dict:
         mod.ban_user(body.user_id, username=body.username, reason=body.reason)
+        if event_bus:
+            from api.server.stream import CommandEvent  # noqa: PLC0415
+
+            event_bus.publish(CommandEvent(
+                who="admin", source="rest", command_kind="ban",
+                content=f"Banned {body.username or body.user_id}: {body.reason}",
+                target="all", result="ok",
+            ))
         return {"ok": True}
 
     @router.delete("/banned/{user_id}")

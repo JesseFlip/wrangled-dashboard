@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from api.moderation import ModerationStore
     from api.server.auth import AuthChecker
     from api.server.hub import Hub
+    from api.server.stream import CommandEventBus
 
 
 def _summarize(cmd: Command) -> str:
@@ -71,7 +72,7 @@ def build_metadata_router() -> APIRouter:
     return router
 
 
-def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None = None) -> APIRouter:  # noqa: C901, PLR0915
+def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None = None, event_bus: CommandEventBus | None = None) -> APIRouter:  # noqa: C901, PLR0915
     dep = build_rest_auth_dep(auth)
     router = APIRouter(prefix="/api", dependencies=[Depends(dep)])
 
@@ -117,6 +118,14 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
             if isinstance(command, TextCommand):
                 match = mod.check_profanity(command.text)
                 if match:
+                    if event_bus:
+                        from api.server.stream import CommandEvent  # noqa: PLC0415
+
+                        event_bus.publish(CommandEvent(
+                            who="api-user", source="rest", command_kind=command.kind,
+                            content=command.text if hasattr(command, "text") else str(command.model_dump())[:200],
+                            target=mac, result="blocked", flag="content_blocked", flag_reason=match,
+                        ))
                     raise HTTPException(status_code=403, detail="blocked content")
             # Clamp brightness
             cap = mod.brightness_cap
@@ -141,6 +150,14 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
                 detail=str(command.model_dump(exclude={"raw_info"}))[:200],
                 result="ok" if result.ok else (result.error or "fail"),
             )
+        if event_bus:
+            from api.server.stream import CommandEvent  # noqa: PLC0415
+
+            event_bus.publish(CommandEvent(
+                who="api-user", source="rest", command_kind=command.kind,
+                content=_summarize(command), target=mac,
+                result="ok" if result.ok else (result.error or "fail"),
+            ))
         return result
 
     @router.put("/devices/{mac}/name")

@@ -66,9 +66,9 @@ def create_app(
         }
 
     app.include_router(build_ws_router(hub, checker))
-    app.include_router(build_rest_router(hub, checker, mod))
+    app.include_router(build_rest_router(hub, checker, mod, event_bus))
     app.include_router(build_metadata_router())
-    app.include_router(build_mod_router(mod, hub, checker))
+    app.include_router(build_mod_router(mod, hub, checker, event_bus))
     app.include_router(build_schedule_router())
     app.include_router(build_mode_router(mode_mgr, checker))
     app.include_router(build_stream_router(event_bus, checker))
