@@ -144,11 +144,8 @@ class MatrixModeManager:
         if remaining.total_seconds() <= 0:
             return "TIME!"
         total_secs = int(remaining.total_seconds())
-        hours, remainder = divmod(total_secs, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        if hours > 0:
-            return f"T-{hours}:{minutes:02d}:{seconds:02d}"
-        return f"T-{minutes}:{seconds:02d}"
+        minutes, seconds = divmod(total_secs, 60)
+        return f"{minutes}:{seconds:02d}"
 
     def _gen_schedule(self) -> str | None:
         current = get_current_session()
