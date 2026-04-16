@@ -31,7 +31,7 @@ def build_mode_router(manager: MatrixModeManager, auth: AuthChecker) -> APIRoute
         return manager.config
 
     @router.put("")
-    def set_mode(body: ModeBody) -> dict[str, Any]:
+    async def set_mode(body: ModeBody) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}
         if body.target:
             kwargs["target"] = body.target
@@ -46,7 +46,7 @@ def build_mode_router(manager: MatrixModeManager, auth: AuthChecker) -> APIRoute
         return manager.set_mode(body.mode, **kwargs)
 
     @router.post("/idle")
-    def go_idle() -> dict[str, Any]:
+    async def go_idle() -> dict[str, Any]:
         return manager.set_mode("idle")
 
     return router
