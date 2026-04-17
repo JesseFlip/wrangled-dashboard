@@ -8,12 +8,13 @@ This React application was built using Vite and currently acts as the Command Ce
 
 *One community, twelve months of building toward April.*
 
-- **Late 2024**: Jesse becomes Community Committee Chair — AI Night concept is born.
-- **Jan 2025**: PyTexas AI Night launches as a monthly virtual lightning talk series on Discord.
+- **MAy 2025**: Jesse becomes Community Committee Chair — AI Night concept is born.
+- **Jan 202**: PyTexas AI Night launches as a monthly virtual lightning talk series on Discord.
 - **Feb 2026**: Jesse commits full-time to PyTexas & Per Scholas.
-- **Mar 25, 2026**: Jim (CowboyQuant) presents Lumbergh at AI Night. The talk goes down as the "Talk of the season 🏆". The WrangLED concept is born.
-- **Apr 12, 2026**: Hardware arrives. The first LED panel lights up in the kitchen at 2:17 AM 🔥.
-- **Apr 17–19, 2026**: PyTexas 2025.
+- **Mar 25, 2026**: Jim (CowboyQuant) presents Lumbergh at AI Night. The talk goes down as the "Talk of the season 🏆".
+-**Apr 02. 2026**: The WrangLED concept is born at the DFW Pythoneers Meetup in Plano.
+- **Apr 6, 2026**: Hardware arrives. The first LED panel lights up in the kitchen at 2:17 AM 🔥.
+- **Apr 17–19, 2026**: PyTexas 2026.
 
 ### WrangLED Origin Story
 
