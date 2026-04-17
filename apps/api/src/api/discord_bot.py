@@ -197,15 +197,29 @@ class WrangledBot(commands.Bot):
             )
 
         @led_group.command(name="preset", description="Apply a preset scene")
-        @app_commands.choices(name=[app_commands.Choice(name=n, value=n) for n in PRESET_NAMES])
+        @app_commands.describe(name="Preset name")
         async def slash_preset(
-            interaction: discord.Interaction, name: app_commands.Choice[str]
+            interaction: discord.Interaction, name: str,
         ) -> None:
-            cmd = PresetCommand(name=name.value)
+            if name not in PRESET_NAMES:
+                await interaction.response.send_message(
+                    f"Unknown preset. Available: {', '.join(PRESET_NAMES)}"
+                )
+                return
+            cmd = PresetCommand(name=name)
             result = await self.send(cmd, interaction=interaction)
             await interaction.response.send_message(
-                _format_result(result, f"Preset → {name.value}")
+                _format_result(result, f"Preset → {name}")
             )
+
+        @slash_preset.autocomplete("name")
+        async def _preset_autocomplete(
+            interaction: discord.Interaction, current: str,  # noqa: ARG001
+        ) -> list[app_commands.Choice[str]]:
+            return [
+                app_commands.Choice(name=n, value=n)
+                for n in PRESET_NAMES if current.lower() in n.lower()
+            ][:25]
 
         @led_group.command(name="on", description="Turn the matrix on")
         async def slash_on(interaction: discord.Interaction) -> None:
