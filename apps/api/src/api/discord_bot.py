@@ -220,7 +220,7 @@ class WrangledBot(commands.Bot):
             interaction: discord.Interaction,
             message: str,
             color: str | None = None,
-            speed: int = 128,
+            speed: int = 225,
         ) -> None:
             rgb = _parse_color(color) if color else None
             cmd = TextCommand(text=message[:64], color=rgb, speed=min(max(speed, 32), 240))
@@ -400,7 +400,7 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
             if not rest:
                 await ctx.reply("Usage: `!led text <message>`")
                 return
-            result = await _ctx_send(TextCommand(text=rest[:64]))
+            result = await _ctx_send(TextCommand(text=rest[:64], speed=225))
             await ctx.reply(_format_result(result, f'Text → "{rest[:32]}"'))
         elif verb == "preset":
             name = rest.strip().lower()
