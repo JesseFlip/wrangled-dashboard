@@ -74,28 +74,31 @@ async def _send(  # noqa: PLR0913, PLR0911, PLR0912
         if isinstance(command, BrightnessCommand) and command.brightness > cap:
             command = BrightnessCommand(brightness=cap)
 
-    target = mac or _first_mac(hub)
-    if target is None:
+    targets = [mac] if mac else [d.mac for d in hub.all_devices()]
+    if not targets:
         return "No WLED devices connected."
-    if mod is not None and mod.is_device_locked(target):
-        return "Device is locked by admin."
 
-    try:
-        result = await hub.send_command(target, command)
-    except Exception as exc:  # noqa: BLE001
-        return str(exc)
-
-    if mod is not None:
-        mod.record_command(user_id)
-        mod.log_command(
-            who=f"{username} ({user_id})",
-            source="discord",
-            device_mac=target,
-            command_kind=getattr(command, "kind", "?"),
-            detail=str(getattr(command, "model_dump", dict)())[:200],
-            result="ok" if result.ok else (result.error or "fail"),
-        )
-    return result
+    last_result: PushResult | str = "No devices reached."
+    for target in targets:
+        if mod is not None and mod.is_device_locked(target):
+            continue
+        try:
+            result = await hub.send_command(target, command)
+        except Exception as exc:  # noqa: BLE001
+            last_result = str(exc)
+            continue
+        if mod is not None:
+            mod.record_command(user_id)
+            mod.log_command(
+                who=f"{username} ({user_id})",
+                source="discord",
+                device_mac=target,
+                command_kind=getattr(command, "kind", "?"),
+                detail=str(getattr(command, "model_dump", dict)())[:200],
+                result="ok" if result.ok else (result.error or "fail"),
+            )
+        last_result = result
+    return last_result
 
 
 def _parse_color(value: str) -> RGB | None:
