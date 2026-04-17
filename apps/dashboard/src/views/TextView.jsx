@@ -11,7 +11,7 @@ function hexToRgb(hex) {
   };
 }
 
-export default function TextView({ group, color, brightness, onCommandSent }) {
+export default function TextView({ group, color, brightness, speed, onCommandSent }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [quickTexts, setQuickTexts] = useState([]);
@@ -30,7 +30,7 @@ export default function TextView({ group, color, brightness, onCommandSent }) {
         kind: 'text',
         text: trimmed,
         color: hexToRgb(color),
-        speed: 20,
+        speed,
         brightness,
       };
       await api.broadcastCommand(group, cmd);
@@ -40,7 +40,7 @@ export default function TextView({ group, color, brightness, onCommandSent }) {
     } finally {
       setSending(false);
     }
-  }, [group, color, brightness, onCommandSent]);
+  }, [group, color, brightness, speed, onCommandSent]);
 
   const addQuickText = async () => {
     const trimmed = text.trim();

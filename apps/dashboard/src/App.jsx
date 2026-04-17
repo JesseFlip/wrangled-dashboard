@@ -28,6 +28,7 @@ export default function App() {
   const [group, setGroup] = useState('all');
   const [groups, setGroups] = useState(['all']);
   const [brightness, setBrightness] = useState(128);
+  const [speed, setSpeed] = useState(20);
   const [color, setColor] = useState('#3b82f6');
   const [deviceCount, setDeviceCount] = useState(0);
   const [discordActive, setDiscordActive] = useState(false);
@@ -126,6 +127,8 @@ export default function App() {
           groups={groups}
           brightness={brightness}
           onBrightnessChange={handleBrightnessChange}
+          speed={speed}
+          onSpeedChange={setSpeed}
           color={color}
           onColorChange={(hex) => {
             setColor(hex);
@@ -155,8 +158,8 @@ export default function App() {
           discordActive={discordActive}
         />
         <main className="tab-content">
-          {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} onCommandSent={trackCommand} />}
-          {tab === 'text' && <TextView group={group} color={color} brightness={brightness} onCommandSent={trackCommand} />}
+          {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} speed={speed} onCommandSent={trackCommand} />}
+          {tab === 'text' && <TextView group={group} color={color} brightness={brightness} speed={speed} onCommandSent={trackCommand} />}
           {tab === 'mode' && <ModeView />}
           {tab === 'discord' && <StreamView group={group} />}
           {tab === 'toolkit' && (

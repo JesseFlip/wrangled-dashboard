@@ -34,6 +34,8 @@ export default function GlobalBar({
   groups,
   brightness,
   onBrightnessChange,
+  speed,
+  onSpeedChange,
   color,
   onColorChange,
   onKill,
@@ -109,7 +111,7 @@ export default function GlobalBar({
         ))}
       </div>
 
-      {/* Brightness + color dot */}
+      {/* Brightness + speed + color dot */}
       <div className="global-controls-row">
         <input
           type="range"
@@ -118,6 +120,16 @@ export default function GlobalBar({
           max={200}
           value={brightness}
           onChange={(e) => onBrightnessChange(Number(e.target.value))}
+          title={`Brightness: ${brightness}`}
+        />
+        <input
+          type="range"
+          className="global-speed-slider"
+          min={0}
+          max={240}
+          value={speed}
+          onChange={(e) => onSpeedChange(Number(e.target.value))}
+          title={`Text speed: ${speed}`}
         />
         <button
           className="global-color-dot"

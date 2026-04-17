@@ -801,7 +801,8 @@ input, select, textarea {
   gap: var(--sp-3);
 }
 
-.global-brightness-slider {
+.global-brightness-slider,
+.global-speed-slider {
   appearance: none;
   flex: 1;
   height: 6px;
@@ -810,7 +811,8 @@ input, select, textarea {
   outline: none;
 }
 
-.global-brightness-slider::-webkit-slider-thumb {
+.global-brightness-slider::-webkit-slider-thumb,
+.global-speed-slider::-webkit-slider-thumb {
   appearance: none;
   width: 18px;
   height: 18px;
@@ -820,7 +822,8 @@ input, select, textarea {
   cursor: pointer;
 }
 
-.global-brightness-slider::-moz-range-thumb {
+.global-brightness-slider::-moz-range-thumb,
+.global-speed-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: var(--radius-full);
