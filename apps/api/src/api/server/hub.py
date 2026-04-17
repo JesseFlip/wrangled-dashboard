@@ -131,7 +131,7 @@ class Hub:
         mac: str,
         command: Command,
         *,
-        timeout: float = 5.0,  # noqa: ASYNC109
+        timeout: float = 8.0,  # noqa: ASYNC109
     ) -> PushResult:
         owner_id = self._ownership.get(mac)
         if owner_id is None or owner_id not in self._conns:

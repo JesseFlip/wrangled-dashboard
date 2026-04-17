@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 
@@ -162,25 +163,31 @@ async def _post_one(
     body: dict,
     *,
     timeout: float,  # noqa: ASYNC109
+    retries: int = 2,
 ) -> PushResult:
     url = f"http://{device.ip}/json/state"
-    try:
-        response = await client.post(
-            url,
-            content=json.dumps(body, ensure_ascii=False).encode(),
-            headers={"content-type": "application/json"},
-            timeout=timeout,
-        )
-    except httpx.TimeoutException as exc:
-        logger.debug("push %s: timeout: %s", device.ip, exc)
-        return PushResult(ok=False, error=f"timeout: {exc}")
-    except httpx.HTTPError as exc:
-        logger.debug("push %s: transport error: %s", device.ip, exc)
-        return PushResult(ok=False, error=str(exc))
-
-    if response.status_code != httpx.codes.OK:
-        return PushResult(ok=False, status=response.status_code, error=response.text[:200])
-    return PushResult(ok=True, status=response.status_code)
+    last_result: PushResult | None = None
+    for attempt in range(1 + retries):
+        try:
+            response = await client.post(
+                url,
+                content=json.dumps(body, ensure_ascii=False).encode(),
+                headers={"content-type": "application/json"},
+                timeout=timeout,
+            )
+        except httpx.TimeoutException as exc:
+            logger.debug("push %s: timeout (attempt %d): %s", device.ip, attempt + 1, exc)
+            last_result = PushResult(ok=False, error=f"timeout: {exc}")
+        except httpx.HTTPError as exc:
+            logger.debug("push %s: transport error (attempt %d): %s", device.ip, attempt + 1, exc)
+            last_result = PushResult(ok=False, error=str(exc))
+        else:
+            if response.status_code != httpx.codes.OK:
+                return PushResult(ok=False, status=response.status_code, error=response.text[:200])
+            return PushResult(ok=True, status=response.status_code)
+        if attempt < retries:
+            await asyncio.sleep(0.3)
+    return last_result  # type: ignore[return-value]
 
 
 async def push_command(
