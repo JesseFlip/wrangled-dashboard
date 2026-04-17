@@ -92,16 +92,21 @@ class MatrixModeManager:
 
         return self.config
 
+    async def _fan_out(self, cmd: object, *, timeout: float = 3.0) -> None:
+        """Send a command to all devices concurrently."""
+        async def _one(mac: str) -> None:
+            try:
+                await self._hub.send_command(mac, cmd, timeout=timeout)
+            except Exception:  # noqa: BLE001
+                logger.debug("fan_out failed for %s", mac)
+
+        await asyncio.gather(*[_one(d.mac) for d in self._hub.all_devices()])
+
     async def _blank_all(self) -> None:
         """Send solid black to all devices (blank the screen)."""
         from wrangled_contracts import ColorCommand  # noqa: PLC0415
 
-        cmd = ColorCommand(color={"r": 0, "g": 0, "b": 0})
-        for device in self._hub.all_devices():
-            try:
-                await self._hub.send_command(device.mac, cmd, timeout=3.0)
-            except Exception:  # noqa: BLE001
-                pass
+        await self._fan_out(ColorCommand(color={"r": 0, "g": 0, "b": 0}))
 
     def _restart_loop(self) -> None:
         if self._task is not None:
@@ -209,17 +214,9 @@ class MatrixModeManager:
             from wrangled_contracts import BrightnessCommand
 
             bri_cmd = BrightnessCommand(brightness=min(int(brightness), 200))
-            for device in self._hub.all_devices():
-                try:
-                    await self._hub.send_command(device.mac, bri_cmd, timeout=3.0)
-                except Exception:  # noqa: BLE001
-                    pass
+            await self._fan_out(bri_cmd)
 
-        for device in self._hub.all_devices():
-            try:
-                await self._hub.send_command(device.mac, cmd, timeout=3.0)
-            except Exception:  # noqa: BLE001
-                logger.debug("mode push failed for %s", device.mac)
+        await self._fan_out(cmd)
 
     async def _countdown_finished(self) -> None:
         """Fire fireworks effect for 10s, then blank and go idle."""
@@ -227,11 +224,7 @@ class MatrixModeManager:
 
         logger.info("countdown finished — firing fireworks")
         fx = EffectCommand(name="fireworks", speed=128, intensity=200)
-        for device in self._hub.all_devices():
-            try:
-                await self._hub.send_command(device.mac, fx, timeout=3.0)
-            except Exception:  # noqa: BLE001
-                pass
+        await self._fan_out(fx)
         await asyncio.sleep(10)
         # Go idle: blank screens, stop loop (don't call set_mode from inside _run)
         self._mode = "idle"
