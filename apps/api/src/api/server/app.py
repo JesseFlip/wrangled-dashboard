@@ -89,7 +89,7 @@ def create_app(
             from api.discord_bot import run_discord_bot  # noqa: PLC0415
 
             app.state.discord_task = asyncio.create_task(
-                run_discord_bot(hub, discord_token, guild_ids=discord_guild_ids or [], mod=mod),
+                run_discord_bot(hub, discord_token, guild_ids=discord_guild_ids or [], mod=mod, event_bus=event_bus),
             )
             logger.info("discord bot starting (guild_ids=%s)", discord_guild_ids)
 

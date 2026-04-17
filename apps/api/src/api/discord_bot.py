@@ -29,6 +29,7 @@ from wrangled_contracts import (
 if TYPE_CHECKING:
     from api.moderation import ModerationStore
     from api.server.hub import Hub
+    from api.server.stream import CommandEventBus
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,28 @@ def _first_mac(hub: Hub) -> str | None:
     return devices[0].mac if devices else None
 
 
+def _summarize_cmd(cmd: object) -> str:
+    """Short description of a command for the event stream."""
+    if isinstance(cmd, TextCommand):
+        return cmd.text
+    if isinstance(cmd, EffectCommand):
+        return cmd.name
+    if isinstance(cmd, ColorCommand):
+        return f"color({cmd.color.r},{cmd.color.g},{cmd.color.b})"
+    if isinstance(cmd, PresetCommand):
+        return cmd.name
+    if isinstance(cmd, PowerCommand):
+        return f"power({'on' if cmd.on else 'off'})"
+    return getattr(cmd, "kind", "?")
+
+
 async def _send(  # noqa: PLR0913, PLR0911, PLR0912
     hub: Hub,
     command,  # noqa: ANN001
     mac: str | None = None,
     *,
     mod: ModerationStore | None = None,
+    event_bus: CommandEventBus | None = None,
     user_id: str = "unknown",
     username: str = "unknown",
 ) -> PushResult | str:
@@ -97,6 +114,14 @@ async def _send(  # noqa: PLR0913, PLR0911, PLR0912
                 detail=str(getattr(command, "model_dump", dict)())[:200],
                 result="ok" if result.ok else (result.error or "fail"),
             )
+        if event_bus is not None:
+            from api.server.stream import CommandEvent  # noqa: PLC0415
+
+            event_bus.publish(CommandEvent(
+                who=f"{username}", source="discord", command_kind=getattr(command, "kind", "?"),
+                content=_summarize_cmd(command), target=target,
+                result="ok" if isinstance(result, PushResult) and result.ok else "fail",
+            ))
         last_result = result
     return last_result
 
@@ -113,13 +138,18 @@ class WrangledBot(commands.Bot):
     """Discord bot that drives WLED matrices via the Hub."""
 
     def __init__(
-        self, hub: Hub, guild_ids: list[int] | None = None, mod: ModerationStore | None = None,
+        self,
+        hub: Hub,
+        guild_ids: list[int] | None = None,
+        mod: ModerationStore | None = None,
+        event_bus: CommandEventBus | None = None,
     ) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
         self.hub = hub
         self.mod = mod
+        self.event_bus = event_bus
         self._guild_ids = guild_ids or []
         self._setup_slash_commands()
 
@@ -140,7 +170,7 @@ class WrangledBot(commands.Bot):
         else:
             uid = "unknown"
             uname = "unknown"
-        return await _send(self.hub, command, mod=self.mod, user_id=uid, username=uname)
+        return await _send(self.hub, command, mod=self.mod, event_bus=self.event_bus, user_id=uid, username=uname)
 
     def _setup_slash_commands(self) -> None:
         led_group = app_commands.Group(name="led", description="Control the WrangLED matrix")
@@ -401,9 +431,10 @@ async def run_discord_bot(
     token: str,
     guild_ids: list[int] | None = None,
     mod: ModerationStore | None = None,
+    event_bus: CommandEventBus | None = None,
 ) -> None:
     """Start the Discord bot. Runs forever (call as asyncio.create_task)."""
-    bot = WrangledBot(hub, guild_ids=guild_ids, mod=mod)
+    bot = WrangledBot(hub, guild_ids=guild_ids, mod=mod, event_bus=event_bus)
     setup_prefix_commands(bot)
     try:
         await bot.start(token)
