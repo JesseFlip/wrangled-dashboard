@@ -30,7 +30,7 @@ def create_app(
     *,
     auth_token: str | None = None,
     discord_token: str | None = None,
-    discord_guild_id: int | None = None,
+    discord_guild_ids: list[int] | None = None,
     mod_store: ModerationStore | None = None,
 ) -> FastAPI:
     """Build the wrangled api application."""
@@ -89,9 +89,9 @@ def create_app(
             from api.discord_bot import run_discord_bot  # noqa: PLC0415
 
             app.state.discord_task = asyncio.create_task(
-                run_discord_bot(hub, discord_token, guild_id=discord_guild_id, mod=mod),
+                run_discord_bot(hub, discord_token, guild_ids=discord_guild_ids or [], mod=mod),
             )
-            logger.info("discord bot starting (guild_id=%s)", discord_guild_id)
+            logger.info("discord bot starting (guild_ids=%s)", discord_guild_ids)
 
         @app.on_event("shutdown")
         async def _stop_discord() -> None:

@@ -21,4 +21,5 @@ class DiscordSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DISCORD_", env_file=".env", extra="ignore")
 
     bot_token: str | None = None
-    guild_id: int | None = None  # for instant slash-command registration during dev
+    guild_id: int | None = None  # single guild (legacy); prefer guild_ids
+    guild_ids: str | None = None  # comma-separated guild IDs for multi-server sync

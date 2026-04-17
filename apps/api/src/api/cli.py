@@ -37,10 +37,17 @@ def _run_serve(args: argparse.Namespace) -> int:
     host = args.host or settings.host
     port = args.port or settings.port
     token = None if args.auth_disabled else settings.auth_token
+    # Parse guild IDs: prefer comma-separated DISCORD_GUILD_IDS, fall back to single DISCORD_GUILD_ID
+    guild_ids: list[int] = []
+    if discord.guild_ids:
+        guild_ids = [int(g.strip()) for g in discord.guild_ids.split(",") if g.strip()]
+    elif discord.guild_id:
+        guild_ids = [discord.guild_id]
+
     app = create_app(
         auth_token=token,
         discord_token=discord.bot_token,
-        discord_guild_id=discord.guild_id,
+        discord_guild_ids=guild_ids,
     )
     uvicorn.run(app, host=host, port=port, log_level="info")
     return 0

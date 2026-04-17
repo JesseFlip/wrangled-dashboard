@@ -110,14 +110,14 @@ class WrangledBot(commands.Bot):
     """Discord bot that drives WLED matrices via the Hub."""
 
     def __init__(
-        self, hub: Hub, guild_id: int | None = None, mod: ModerationStore | None = None
+        self, hub: Hub, guild_ids: list[int] | None = None, mod: ModerationStore | None = None,
     ) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
         self.hub = hub
         self.mod = mod
-        self._guild_id = guild_id
+        self._guild_ids = guild_ids or []
         self._setup_slash_commands()
 
     async def send(
@@ -244,11 +244,12 @@ class WrangledBot(commands.Bot):
         self.tree.add_command(led_group)
 
     async def setup_hook(self) -> None:
-        if self._guild_id:
-            guild = discord.Object(id=self._guild_id)
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
-            logger.info("discord: synced slash commands to guild %s", self._guild_id)
+        if self._guild_ids:
+            for gid in self._guild_ids:
+                guild = discord.Object(id=gid)
+                self.tree.copy_global_to(guild=guild)
+                await self.tree.sync(guild=guild)
+                logger.info("discord: synced slash commands to guild %s", gid)
         else:
             await self.tree.sync()
             logger.info("discord: synced slash commands globally (may take ~1h to propagate)")
@@ -381,11 +382,11 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
 async def run_discord_bot(
     hub: Hub,
     token: str,
-    guild_id: int | None = None,
+    guild_ids: list[int] | None = None,
     mod: ModerationStore | None = None,
 ) -> None:
     """Start the Discord bot. Runs forever (call as asyncio.create_task)."""
-    bot = WrangledBot(hub, guild_id=guild_id, mod=mod)
+    bot = WrangledBot(hub, guild_ids=guild_ids, mod=mod)
     setup_prefix_commands(bot)
     try:
         await bot.start(token)
