@@ -58,7 +58,7 @@ class MatrixModeManager:
         self._restart_loop()
         return self.config
 
-    def set_mode(self, mode: str, **kwargs: Any) -> dict[str, Any]:
+    async def set_mode(self, mode: str, **kwargs: Any) -> dict[str, Any]:
         """Switch mode. Restarts the background loop."""
         self._mode = mode
         self._config = dict(kwargs)
@@ -86,9 +86,9 @@ class MatrixModeManager:
 
         self._restart_loop()
 
-        # Idle means blank the displays
+        # Idle means blank the displays — await so callers don't race
         if mode == "idle":
-            asyncio.ensure_future(self._blank_all())
+            await self._blank_all()
 
         return self.config
 
