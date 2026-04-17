@@ -28,7 +28,7 @@ export default function App() {
   const [group, setGroup] = useState('all');
   const [groups, setGroups] = useState(['all']);
   const [brightness, setBrightness] = useState(128);
-  const [speed, setSpeed] = useState(20);
+  const [speed, setSpeed] = useState(225);
   const [color, setColor] = useState('#3b82f6');
   const [deviceCount, setDeviceCount] = useState(0);
   const [discordActive, setDiscordActive] = useState(false);

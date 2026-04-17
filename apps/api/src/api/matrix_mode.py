@@ -202,7 +202,7 @@ class MatrixModeManager:
     async def _push_text(self, text: str, *, speed: int | None = None) -> None:
         """Send a TextCommand to every connected device via the hub."""
         color_cfg = self._config.get("color", {"r": 255, "g": 255, "b": 255})
-        speed = speed if speed is not None else self._config.get("speed", 20)
+        speed = speed if speed is not None else self._config.get("speed", 225)
         brightness = self._config.get("brightness")
 
         cmd = TextCommand(

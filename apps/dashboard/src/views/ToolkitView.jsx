@@ -20,7 +20,7 @@ export default function ToolkitView({ group, color, onColorChange, brightness, o
   const [emoji, setEmoji] = useState({});
   const [devices, setDevices] = useState([]);
   const [selectedEffect, setSelectedEffect] = useState('');
-  const [speed, setSpeed] = useState(128);
+  const [speed, setSpeed] = useState(225);
   const [intensity, setIntensity] = useState(128);
   const [hexInput, setHexInput] = useState(color || '#ff7a00');
   const [sending, setSending] = useState(false);

@@ -3,7 +3,7 @@ import { useState } from 'react';
 export default function TextTab({ onSend }) {
   const [text, setText] = useState('');
   const [color, setColor] = useState('#ff7a00');
-  const [speed, setSpeed] = useState(20);
+  const [speed, setSpeed] = useState(225);
   const [intensity, setIntensity] = useState(128);
 
   const send = () => {
