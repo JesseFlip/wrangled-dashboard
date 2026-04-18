@@ -60,7 +60,6 @@ export default function CommandView({ group, color, brightness, speed, onCommand
   const broadcast = useCallback(async (command) => {
     setSending(true);
     try {
-      await api.goIdle();
       await api.broadcastCommand(group, command);
       if (onCommandSent) onCommandSent(command);
     } catch {

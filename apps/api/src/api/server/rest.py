@@ -25,6 +25,7 @@ from api.server.hub import (
 )
 
 if TYPE_CHECKING:
+    from api.matrix_mode import MatrixModeManager
     from api.moderation import ModerationStore
     from api.server.auth import AuthChecker
     from api.server.hub import Hub
@@ -77,6 +78,7 @@ def build_rest_router(  # noqa: C901, PLR0915
     auth: AuthChecker,
     mod: ModerationStore | None = None,
     event_bus: CommandEventBus | None = None,
+    mode_mgr: MatrixModeManager | None = None,
 ) -> APIRouter:
     dep = build_rest_auth_dep(auth)
     router = APIRouter(prefix="/api", dependencies=[Depends(dep)])
@@ -105,9 +107,11 @@ def build_rest_router(  # noqa: C901, PLR0915
         return {"state": state}
 
     @router.post("/devices/{mac}/commands")
-    async def post_command(mac: str, command: Command) -> PushResult:  # noqa: PLR0912
+    async def post_command(mac: str, command: Command) -> PushResult:  # noqa: C901, PLR0912
         if hub.find_device(mac) is None:
             raise HTTPException(status_code=404, detail=f"unknown device: {mac}")
+        if mode_mgr is not None:
+            await mode_mgr.interrupt()
         # Moderation checks
         if mod is not None:
             if mod.is_device_locked(mac):

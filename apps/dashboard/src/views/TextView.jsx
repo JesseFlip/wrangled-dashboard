@@ -25,7 +25,6 @@ export default function TextView({ group, color, brightness, speed, onCommandSen
     if (!trimmed) return;
     setSending(true);
     try {
-      await api.goIdle();
       const cmd = {
         kind: 'text',
         text: trimmed,

@@ -36,6 +36,7 @@ from api.discord_queue import (
 )
 
 if TYPE_CHECKING:
+    from api.matrix_mode import MatrixModeManager
     from api.moderation import ModerationStore
     from api.server.hub import Hub
     from api.server.stream import CommandEventBus
@@ -67,17 +68,20 @@ def _summarize_cmd(cmd: object) -> str:
     return getattr(cmd, "kind", "?")
 
 
-async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912
+async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912, PLR0915
     hub: Hub,
     command,  # noqa: ANN001
     mac: str | None = None,
     *,
     mod: ModerationStore | None = None,
     event_bus: CommandEventBus | None = None,
+    mode_mgr: MatrixModeManager | None = None,
     user_id: str = "unknown",
     username: str = "unknown",
 ) -> PushResult | str:
     """Push a command to the hub with moderation checks."""
+    if mode_mgr is not None:
+        await mode_mgr.interrupt()
     if mod is not None:
         if mod.bot_paused:
             return "Bot is paused by admin."
@@ -144,13 +148,16 @@ async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912
         if event_bus is not None:
             from api.server.stream import CommandEvent  # noqa: PLC0415
 
-            event_bus.publish(CommandEvent(
-                who=f"{username}", source="discord",
-                command_kind=getattr(command, "kind", "?"),
-                content=_summarize_cmd(command),
-                target="all" if mac is None else mac,
-                result=agg_result,
-            ))
+            event_bus.publish(
+                CommandEvent(
+                    who=f"{username}",
+                    source="discord",
+                    command_kind=getattr(command, "kind", "?"),
+                    content=_summarize_cmd(command),
+                    target="all" if mac is None else mac,
+                    result=agg_result,
+                )
+            )
     return last_result
 
 
@@ -171,6 +178,7 @@ class WrangledBot(commands.Bot):
         guild_ids: list[int] | None = None,
         mod: ModerationStore | None = None,
         event_bus: CommandEventBus | None = None,
+        mode_mgr: MatrixModeManager | None = None,
     ) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
@@ -178,6 +186,7 @@ class WrangledBot(commands.Bot):
         self.hub = hub
         self.mod = mod
         self.event_bus = event_bus
+        self.mode_mgr = mode_mgr
         self.queue = DiscordQueue()
         self._guild_ids = guild_ids or []
         self._setup_slash_commands()
@@ -191,6 +200,7 @@ class WrangledBot(commands.Bot):
                 command,
                 mod=self.mod,
                 event_bus=self.event_bus,
+                mode_mgr=self.mode_mgr,
                 user_id=uid,
                 username=uname,
             )
@@ -297,7 +307,8 @@ class WrangledBot(commands.Bot):
         @led_group.command(name="preset", description="Apply a preset scene")
         @app_commands.describe(name="Preset name")
         async def slash_preset(
-            interaction: discord.Interaction, name: str,
+            interaction: discord.Interaction,
+            name: str,
         ) -> None:
             if name not in PRESET_NAMES:
                 await interaction.response.send_message(
@@ -309,11 +320,13 @@ class WrangledBot(commands.Bot):
 
         @slash_preset.autocomplete("name")
         async def _preset_autocomplete(
-            interaction: discord.Interaction, current: str,  # noqa: ARG001
+            interaction: discord.Interaction,
+            current: str,  # noqa: ARG001
         ) -> list[app_commands.Choice[str]]:
             return [
                 app_commands.Choice(name=n, value=n)
-                for n in PRESET_NAMES if current.lower() in n.lower()
+                for n in PRESET_NAMES
+                if current.lower() in n.lower()
             ][:25]
 
         @led_group.command(name="on", description="Turn the matrix on")
@@ -471,15 +484,22 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
                     await ctx.reply(f"Unknown command: `{verb}`. Try: {verbs}")
 
 
-async def run_discord_bot(
+async def run_discord_bot(  # noqa: PLR0913
     hub: Hub,
     token: str,
     guild_ids: list[int] | None = None,
     mod: ModerationStore | None = None,
     event_bus: CommandEventBus | None = None,
+    mode_mgr: MatrixModeManager | None = None,
 ) -> None:
     """Start the Discord bot. Runs forever (call as asyncio.create_task)."""
-    bot = WrangledBot(hub, guild_ids=guild_ids, mod=mod, event_bus=event_bus)
+    bot = WrangledBot(
+        hub,
+        guild_ids=guild_ids,
+        mod=mod,
+        event_bus=event_bus,
+        mode_mgr=mode_mgr,
+    )
     setup_prefix_commands(bot)
     try:
         await bot.start(token)

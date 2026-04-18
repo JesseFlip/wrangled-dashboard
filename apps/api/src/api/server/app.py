@@ -66,7 +66,7 @@ def create_app(
         }
 
     app.include_router(build_ws_router(hub, checker))
-    app.include_router(build_rest_router(hub, checker, mod, event_bus))
+    app.include_router(build_rest_router(hub, checker, mod, event_bus, mode_mgr))
     app.include_router(build_metadata_router())
     app.include_router(build_mod_router(mod, hub, checker, event_bus))
     app.include_router(build_schedule_router())
@@ -89,7 +89,14 @@ def create_app(
             from api.discord_bot import run_discord_bot  # noqa: PLC0415
 
             app.state.discord_task = asyncio.create_task(
-                run_discord_bot(hub, discord_token, guild_ids=discord_guild_ids or [], mod=mod, event_bus=event_bus),
+                run_discord_bot(
+                    hub,
+                    discord_token,
+                    guild_ids=discord_guild_ids or [],
+                    mod=mod,
+                    event_bus=event_bus,
+                    mode_mgr=mode_mgr,
+                ),
             )
             logger.info("discord bot starting (guild_ids=%s)", discord_guild_ids)
 

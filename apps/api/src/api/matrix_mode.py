@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_TICK_FAST = 1   # countdown modes — every second
+_TICK_FAST = 1  # countdown modes — every second
 _TICK_SLOW = 10  # clock/schedule — every 10s
 
 
@@ -94,6 +94,7 @@ class MatrixModeManager:
 
     async def _fan_out(self, cmd: object, *, timeout: float = 3.0) -> None:
         """Send a command to all devices concurrently."""
+
         async def _one(mac: str) -> None:
             try:
                 await self._hub.send_command(mac, cmd, timeout=timeout)
@@ -124,6 +125,28 @@ class MatrixModeManager:
         """Called on app shutdown."""
         if self._task is not None:
             self._task.cancel()
+
+    async def interrupt(self) -> None:
+        """Cancel any running mode without blanking, leaving state at idle.
+
+        Called by the command path (discord + REST) so a user-issued command
+        isn't overwritten by the mode's next tick. Distinct from `set_mode("idle")`,
+        which additionally blanks every device.
+        """
+        if self._mode == "idle":
+            return
+        self._mode = "idle"
+        self._config = {}
+        self._countdown_end = None
+        if self._task is not None:
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
+            except Exception:  # noqa: BLE001
+                logger.debug("interrupt: task raised on cancel")
+            self._task = None
 
     def _tick_interval(self) -> float:
         # Clock/countdown: tick every second so display updates promptly.
