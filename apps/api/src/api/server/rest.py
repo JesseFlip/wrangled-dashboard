@@ -72,7 +72,12 @@ def build_metadata_router() -> APIRouter:
     return router
 
 
-def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None = None, event_bus: CommandEventBus | None = None) -> APIRouter:  # noqa: C901, PLR0915
+def build_rest_router(  # noqa: C901, PLR0915
+    hub: Hub,
+    auth: AuthChecker,
+    mod: ModerationStore | None = None,
+    event_bus: CommandEventBus | None = None,
+) -> APIRouter:
     dep = build_rest_auth_dep(auth)
     router = APIRouter(prefix="/api", dependencies=[Depends(dep)])
 
@@ -100,7 +105,7 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
         return {"state": state}
 
     @router.post("/devices/{mac}/commands")
-    async def post_command(mac: str, command: Command) -> PushResult:
+    async def post_command(mac: str, command: Command) -> PushResult:  # noqa: PLR0912
         if hub.find_device(mac) is None:
             raise HTTPException(status_code=404, detail=f"unknown device: {mac}")
         # Moderation checks
@@ -121,11 +126,23 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
                     if event_bus:
                         from api.server.stream import CommandEvent  # noqa: PLC0415
 
-                        event_bus.publish(CommandEvent(
-                            who="api-user", source="rest", command_kind=command.kind,
-                            content=command.text if hasattr(command, "text") else str(command.model_dump())[:200],
-                            target=mac, result="blocked", flag="content_blocked", flag_reason=match,
-                        ))
+                        blocked_content = (
+                            command.text
+                            if hasattr(command, "text")
+                            else str(command.model_dump())[:200]
+                        )
+                        event_bus.publish(
+                            CommandEvent(
+                                who="api-user",
+                                source="rest",
+                                command_kind=command.kind,
+                                content=blocked_content,
+                                target=mac,
+                                result="blocked",
+                                flag="content_blocked",
+                                flag_reason=match,
+                            )
+                        )
                     raise HTTPException(status_code=403, detail="blocked content")
             # Clamp brightness
             cap = mod.brightness_cap
@@ -153,11 +170,16 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
         if event_bus:
             from api.server.stream import CommandEvent  # noqa: PLC0415
 
-            event_bus.publish(CommandEvent(
-                who="api-user", source="rest", command_kind=command.kind,
-                content=_summarize(command), target=mac,
-                result="ok" if result.ok else (result.error or "fail"),
-            ))
+            event_bus.publish(
+                CommandEvent(
+                    who="api-user",
+                    source="rest",
+                    command_kind=command.kind,
+                    content=_summarize(command),
+                    target=mac,
+                    result="ok" if result.ok else (result.error or "fail"),
+                )
+            )
         return result
 
     @router.put("/devices/{mac}/name")
