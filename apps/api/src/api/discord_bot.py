@@ -105,6 +105,9 @@ async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912
         return "No WLED devices connected."
 
     last_result: PushResult | str = "No devices reached."
+    hit_targets: list[str] = []
+    ok_count = 0
+    fail_count = 0
     for target in targets:
         if mod is not None and mod.is_device_locked(target):
             continue
@@ -112,26 +115,42 @@ async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912
             result = await hub.send_command(target, command)
         except Exception as exc:  # noqa: BLE001
             last_result = str(exc)
+            fail_count += 1
+            hit_targets.append(target)
             continue
-        if mod is not None:
-            mod.record_command(user_id)
-            mod.log_command(
-                who=f"{username} ({user_id})",
-                source="discord",
-                device_mac=target,
-                command_kind=getattr(command, "kind", "?"),
-                detail=str(getattr(command, "model_dump", dict)())[:200],
-                result="ok" if result.ok else (result.error or "fail"),
-            )
+        if result.ok:
+            ok_count += 1
+        else:
+            fail_count += 1
+        hit_targets.append(target)
+        last_result = result
+
+    if hit_targets and mod is not None:
+        mod.record_command(user_id)
+        if ok_count and not fail_count:
+            agg_result = "ok"
+        elif ok_count and fail_count:
+            agg_result = f"partial ({ok_count}/{len(hit_targets)} ok)"
+        else:
+            agg_result = "fail"
+        mod.log_command(
+            who=f"{username} ({user_id})",
+            source="discord",
+            device_mac="all" if mac is None else mac,
+            command_kind=getattr(command, "kind", "?"),
+            detail=str(getattr(command, "model_dump", dict)())[:200],
+            result=agg_result,
+        )
         if event_bus is not None:
             from api.server.stream import CommandEvent  # noqa: PLC0415
 
             event_bus.publish(CommandEvent(
-                who=f"{username}", source="discord", command_kind=getattr(command, "kind", "?"),
-                content=_summarize_cmd(command), target=target,
-                result="ok" if isinstance(result, PushResult) and result.ok else "fail",
+                who=f"{username}", source="discord",
+                command_kind=getattr(command, "kind", "?"),
+                content=_summarize_cmd(command),
+                target="all" if mac is None else mac,
+                result=agg_result,
             ))
-        last_result = result
     return last_result
 
 
