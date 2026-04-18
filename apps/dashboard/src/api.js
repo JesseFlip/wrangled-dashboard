@@ -30,6 +30,7 @@ export const api = {
   listPresets: async () => jsonOrThrow(await fetch('/api/presets', { headers: getHeaders() })),
   listEmoji: async () => jsonOrThrow(await fetch('/api/emoji', { headers: getHeaders() })),
   listWranglers: async () => jsonOrThrow(await fetch('/api/wranglers', { headers: getHeaders() })),
+  recentCommands: async (limit = 100) => jsonOrThrow(await fetch(`/api/commands/recent?limit=${limit}`, { headers: getHeaders() })),
 
   // Matrix mode
   getMode: async () => jsonOrThrow(await fetch('/api/mode', { headers: getHeaders() })),

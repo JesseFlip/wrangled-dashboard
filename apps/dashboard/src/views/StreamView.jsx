@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { subscribeStream } from '../api.js';
+import { api, subscribeStream } from '../api.js';
 import StreamCard from '../components/StreamCard.jsx';
 
 const MAX_EVENTS = 200;
@@ -15,15 +15,45 @@ export default function StreamView({ group }) {
     autoScrollRef.current = autoScroll;
   }, [autoScroll]);
 
-  // SSE subscription
+  // Backfill history on mount, then subscribe to live events. Any events that
+  // arrive while the history fetch is in flight get buffered and merged in.
   useEffect(() => {
+    let cancelled = false;
+    let history = null;
+    const liveBuffer = [];
+
+    const flushIfReady = () => {
+      if (cancelled || history === null) return;
+      setEvents([...history, ...liveBuffer].slice(-MAX_EVENTS));
+    };
+
+    api.recentCommands(MAX_EVENTS)
+      .then((res) => {
+        if (cancelled) return;
+        history = res.events || [];
+        flushIfReady();
+      })
+      .catch(() => {
+        if (cancelled) return;
+        history = [];
+        flushIfReady();
+      });
+
     const source = subscribeStream((evt) => {
+      if (history === null) {
+        liveBuffer.push(evt);
+        return;
+      }
       setEvents((prev) => {
         const next = [...prev, evt];
         return next.length > MAX_EVENTS ? next.slice(next.length - MAX_EVENTS) : next;
       });
     });
-    return () => source.close();
+
+    return () => {
+      cancelled = true;
+      source.close();
+    };
   }, []);
 
   // Auto-scroll on new events

@@ -180,4 +180,33 @@ def build_rest_router(hub: Hub, auth: AuthChecker, mod: ModerationStore | None =
     def wranglers() -> list[dict]:
         return hub.wranglers_summary()
 
+    @router.get("/commands/recent")
+    def recent_commands(limit: int = 100) -> dict[str, list[dict]]:
+        """Recent command history from the persistent log, oldest first.
+
+        Used by the dashboard stream view to backfill history on page load
+        before the live SSE subscription takes over.
+        """
+        if mod is None:
+            return {"events": []}
+        capped = max(1, min(limit, 500))
+        rows = mod.get_history(limit=capped)
+        # get_history returns newest-first; reverse for stream-append order.
+        rows.reverse()
+        events = [
+            {
+                "who": row.get("who", ""),
+                "source": row.get("source", ""),
+                "command_kind": row.get("command_kind", ""),
+                "content": row.get("detail", ""),
+                "target": row.get("device_mac", ""),
+                "result": row.get("result", ""),
+                "flag": False,
+                "flag_reason": "",
+                "timestamp": row.get("timestamp", ""),
+            }
+            for row in rows
+        ]
+        return {"events": events}
+
     return router
