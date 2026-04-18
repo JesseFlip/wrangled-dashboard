@@ -26,6 +26,15 @@ from wrangled_contracts import (
     command_from_emoji,
 )
 
+from api.discord_queue import (
+    DiscordQueue,
+    EnqueueResult,
+    pick_queue_full,
+    pick_queued,
+    pick_unicode,
+    pick_user_limit,
+)
+
 if TYPE_CHECKING:
     from api.moderation import ModerationStore
     from api.server.hub import Hub
@@ -58,7 +67,7 @@ def _summarize_cmd(cmd: object) -> str:
     return getattr(cmd, "kind", "?")
 
 
-async def _send(  # noqa: PLR0913, PLR0911, PLR0912
+async def _send(  # noqa: C901, PLR0913, PLR0911, PLR0912
     hub: Hub,
     command,  # noqa: ANN001
     mac: str | None = None,
@@ -150,27 +159,69 @@ class WrangledBot(commands.Bot):
         self.hub = hub
         self.mod = mod
         self.event_bus = event_bus
+        self.queue = DiscordQueue()
         self._guild_ids = guild_ids or []
         self._setup_slash_commands()
 
-    async def send(
+    def _build_dispatch(self, command, uid: str, uname: str):  # noqa: ANN001, ANN202
+        """Closure the worker runs when the command's slot comes up."""
+
+        async def _dispatch() -> None:
+            await _send(
+                self.hub,
+                command,
+                mod=self.mod,
+                event_bus=self.event_bus,
+                user_id=uid,
+                username=uname,
+            )
+
+        return _dispatch
+
+    def enqueue_for_interaction(
         self,
+        interaction: discord.Interaction,
         command,  # noqa: ANN001
-        *,
-        interaction: discord.Interaction | None = None,
-        ctx: commands.Context | None = None,
-    ) -> PushResult | str:
-        """Convenience: route a command through moderation + hub."""
-        if interaction:
-            uid = str(interaction.user.id)
-            uname = str(interaction.user)
-        elif ctx:
-            uid = str(ctx.author.id)
-            uname = str(ctx.author)
-        else:
-            uid = "unknown"
-            uname = "unknown"
-        return await _send(self.hub, command, mod=self.mod, event_bus=self.event_bus, user_id=uid, username=uname)
+    ) -> str:
+        """Queue a command from a slash interaction and return the ack message."""
+        uid = str(interaction.user.id)
+        uname = str(interaction.user)
+        result = self.queue.try_enqueue(uid, self._build_dispatch(command, uid, uname))
+        if result == EnqueueResult.QUEUED:
+            return pick_queued(self.queue.depth())
+        if result == EnqueueResult.QUEUE_FULL:
+            return pick_queue_full()
+        return pick_user_limit()
+
+    def enqueue_for_ctx(
+        self,
+        ctx: commands.Context,
+        command,  # noqa: ANN001
+    ) -> str:
+        """Queue a command from a prefix-command context."""
+        uid = str(ctx.author.id)
+        uname = str(ctx.author)
+        result = self.queue.try_enqueue(uid, self._build_dispatch(command, uid, uname))
+        if result == EnqueueResult.QUEUED:
+            return pick_queued(self.queue.depth())
+        if result == EnqueueResult.QUEUE_FULL:
+            return pick_queue_full()
+        return pick_user_limit()
+
+    def enqueue_for_message(
+        self,
+        message: discord.Message,
+        command,  # noqa: ANN001
+    ) -> str:
+        """Queue a command from a raw message (e.g. emoji trigger)."""
+        uid = str(message.author.id)
+        uname = str(message.author)
+        result = self.queue.try_enqueue(uid, self._build_dispatch(command, uid, uname))
+        if result == EnqueueResult.QUEUED:
+            return pick_queued(self.queue.depth())
+        if result == EnqueueResult.QUEUE_FULL:
+            return pick_queue_full()
+        return pick_user_limit()
 
     def _setup_slash_commands(self) -> None:
         led_group = app_commands.Group(name="led", description="Control the WrangLED matrix")
@@ -185,15 +236,13 @@ class WrangledBot(commands.Bot):
                 await interaction.response.send_message(f"Unknown color: `{color}`", ephemeral=True)
                 return
             cmd = ColorCommand(color=rgb, brightness=brightness)
-            result = await self.send(cmd, interaction=interaction)
-            await interaction.response.send_message(_format_result(result, f"Color → {color}"))
+            await interaction.response.send_message(self.enqueue_for_interaction(interaction, cmd))
 
         @led_group.command(name="brightness", description="Set brightness (0-200)")
         @app_commands.describe(level="Brightness level 0-200")
         async def slash_brightness(interaction: discord.Interaction, level: int) -> None:
             cmd = BrightnessCommand(brightness=min(max(level, 0), 200))
-            result = await self.send(cmd, interaction=interaction)
-            await interaction.response.send_message(_format_result(result, f"Brightness → {level}"))
+            await interaction.response.send_message(self.enqueue_for_interaction(interaction, cmd))
 
         @led_group.command(name="effect", description="Run a named effect")
         @app_commands.describe(name="Effect name", speed="Speed 0-255", intensity="Intensity 0-255")
@@ -205,14 +254,11 @@ class WrangledBot(commands.Bot):
             intensity: int | None = None,
         ) -> None:
             cmd = EffectCommand(name=name.value, speed=speed, intensity=intensity)
-            result = await self.send(cmd, interaction=interaction)
-            await interaction.response.send_message(
-                _format_result(result, f"Effect → {name.value}")
-            )
+            await interaction.response.send_message(self.enqueue_for_interaction(interaction, cmd))
 
         @led_group.command(name="text", description="Scroll a message across the matrix")
         @app_commands.describe(
-            message="Text to display (max 64 chars)",
+            message="Text to display (max 64 chars, ASCII only)",
             color="Color (optional)",
             speed="Scroll speed 32-240",
         )
@@ -222,12 +268,12 @@ class WrangledBot(commands.Bot):
             color: str | None = None,
             speed: int = 225,
         ) -> None:
+            if not message.isascii():
+                await interaction.response.send_message(pick_unicode(), ephemeral=True)
+                return
             rgb = _parse_color(color) if color else None
             cmd = TextCommand(text=message[:64], color=rgb, speed=min(max(speed, 32), 240))
-            result = await self.send(cmd, interaction=interaction)
-            await interaction.response.send_message(
-                _format_result(result, f'Text → "{message[:32]}"')
-            )
+            await interaction.response.send_message(self.enqueue_for_interaction(interaction, cmd))
 
         @led_group.command(name="preset", description="Apply a preset scene")
         @app_commands.describe(name="Preset name")
@@ -240,10 +286,7 @@ class WrangledBot(commands.Bot):
                 )
                 return
             cmd = PresetCommand(name=name)
-            result = await self.send(cmd, interaction=interaction)
-            await interaction.response.send_message(
-                _format_result(result, f"Preset → {name}")
-            )
+            await interaction.response.send_message(self.enqueue_for_interaction(interaction, cmd))
 
         @slash_preset.autocomplete("name")
         async def _preset_autocomplete(
@@ -256,13 +299,15 @@ class WrangledBot(commands.Bot):
 
         @led_group.command(name="on", description="Turn the matrix on")
         async def slash_on(interaction: discord.Interaction) -> None:
-            result = await self.send(PowerCommand(on=True), interaction=interaction)
-            await interaction.response.send_message(_format_result(result, "Power → ON"))
+            await interaction.response.send_message(
+                self.enqueue_for_interaction(interaction, PowerCommand(on=True))
+            )
 
         @led_group.command(name="off", description="Turn the matrix off")
         async def slash_off(interaction: discord.Interaction) -> None:
-            result = await self.send(PowerCommand(on=False), interaction=interaction)
-            await interaction.response.send_message(_format_result(result, "Power → OFF"))
+            await interaction.response.send_message(
+                self.enqueue_for_interaction(interaction, PowerCommand(on=False))
+            )
 
         @led_group.command(name="status", description="Show current matrix state")
         async def slash_status(interaction: discord.Interaction) -> None:
@@ -291,6 +336,7 @@ class WrangledBot(commands.Bot):
         self.tree.add_command(led_group)
 
     async def setup_hook(self) -> None:
+        await self.queue.start()
         if self._guild_ids:
             for gid in self._guild_ids:
                 guild = discord.Object(id=gid)
@@ -300,6 +346,10 @@ class WrangledBot(commands.Bot):
         else:
             await self.tree.sync()
             logger.info("discord: synced slash commands globally (may take ~1h to propagate)")
+
+    async def close(self) -> None:
+        await self.queue.stop()
+        await super().close()
 
     async def on_ready(self) -> None:
         logger.info("discord: logged in as %s (id=%s)", self.user, self.user.id)
@@ -315,36 +365,15 @@ class WrangledBot(commands.Bot):
         if len(content) <= max_emoji_len and not content.startswith("!"):
             cmd = command_from_emoji(content)
             if cmd is not None:
-                result = await _send(
-                    self.hub,
-                    cmd,
-                    mod=self.mod,
-                    user_id=str(message.author.id),
-                    username=str(message.author),
-                )
-                await message.reply(
-                    _format_result(result, f"Emoji → {content}"), mention_author=False
-                )
-
-
-def _format_result(result: PushResult | str, action: str) -> str:
-    if isinstance(result, str):
-        return f"❌ {action}: {result}"
-    if result.ok:
-        return f"✅ {action}"
-    return f"❌ {action}: {result.error or f'status {result.status}'}"
+                reply = self.enqueue_for_message(message, cmd)
+                await message.reply(reply, mention_author=False)
 
 
 def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
     """Register !led prefix commands."""
 
     @bot.command(name="led")
-    async def led_command(ctx: commands.Context, *, args: str = "") -> None:  # noqa: C901, PLR0912, PLR0915
-        async def _ctx_send(cmd) -> PushResult | str:  # noqa: ANN001
-            return await _send(
-                bot.hub, cmd, mod=bot.mod, user_id=str(ctx.author.id), username=str(ctx.author)
-            )
-
+    async def led_command(ctx: commands.Context, *, args: str = "") -> None:  # noqa: C901, PLR0911, PLR0912, PLR0915
         parts = args.strip().split(maxsplit=1)
         if not parts:
             await ctx.reply(
@@ -356,11 +385,9 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
         rest = parts[1] if len(parts) > 1 else ""
 
         if verb in ("on", "power-on"):
-            result = await _ctx_send(PowerCommand(on=True))
-            await ctx.reply(_format_result(result, "Power → ON"))
+            await ctx.reply(bot.enqueue_for_ctx(ctx, PowerCommand(on=True)))
         elif verb in ("off", "power-off"):
-            result = await _ctx_send(PowerCommand(on=False))
-            await ctx.reply(_format_result(result, "Power → OFF"))
+            await ctx.reply(bot.enqueue_for_ctx(ctx, PowerCommand(on=False)))
         elif verb == "status":
             mac = _first_mac(bot.hub)
             if mac is None:
@@ -387,40 +414,39 @@ def setup_prefix_commands(bot: WrangledBot) -> None:  # noqa: C901, PLR0915
             except ValueError:
                 await ctx.reply("Usage: `!led brightness <0-200>`")
                 return
-            result = await _ctx_send(BrightnessCommand(brightness=min(max(level, 0), 200)))
-            await ctx.reply(_format_result(result, f"Brightness → {level}"))
+            await ctx.reply(
+                bot.enqueue_for_ctx(ctx, BrightnessCommand(brightness=min(max(level, 0), 200)))
+            )
         elif verb in {"effect", "fx"}:
             name = rest.strip().lower()
             if name not in EFFECT_NAMES:
                 await ctx.reply(f"Unknown effect. Available: {', '.join(EFFECT_NAMES)}")
                 return
-            result = await _ctx_send(EffectCommand(name=name))
-            await ctx.reply(_format_result(result, f"Effect → {name}"))
+            await ctx.reply(bot.enqueue_for_ctx(ctx, EffectCommand(name=name)))
         elif verb == "text":
             if not rest:
                 await ctx.reply("Usage: `!led text <message>`")
                 return
-            result = await _ctx_send(TextCommand(text=rest[:64], speed=225))
-            await ctx.reply(_format_result(result, f'Text → "{rest[:32]}"'))
+            if not rest.isascii():
+                await ctx.reply(pick_unicode())
+                return
+            await ctx.reply(bot.enqueue_for_ctx(ctx, TextCommand(text=rest[:64], speed=225)))
         elif verb == "preset":
             name = rest.strip().lower()
             if name not in PRESET_NAMES:
                 await ctx.reply(f"Unknown preset. Available: {', '.join(PRESET_NAMES)}")
                 return
-            result = await _ctx_send(PresetCommand(name=name))
-            await ctx.reply(_format_result(result, f"Preset → {name}"))
+            await ctx.reply(bot.enqueue_for_ctx(ctx, PresetCommand(name=name)))
         else:
             # Try as a color
             rgb = _parse_color(verb)
             if rgb is not None:
-                result = await _ctx_send(ColorCommand(color=rgb))
-                await ctx.reply(_format_result(result, f"Color → {verb}"))
+                await ctx.reply(bot.enqueue_for_ctx(ctx, ColorCommand(color=rgb)))
             else:
                 # Try as emoji
                 cmd = command_from_emoji(verb)
                 if cmd is not None:
-                    result = await _ctx_send(cmd)
-                    await ctx.reply(_format_result(result, f"Emoji → {verb}"))
+                    await ctx.reply(bot.enqueue_for_ctx(ctx, cmd))
                 else:
                     verbs = "color, effect, text, preset, brightness, on, off, status"
                     await ctx.reply(f"Unknown command: `{verb}`. Try: {verbs}")
