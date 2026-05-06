@@ -1,6 +1,6 @@
 # WrangLED Fast-Track Dashboard
 
-WrangLED is a highly-interactive build log and project management dashboard for the PyTexas 2025 conference (April 17–19, 2026 at the Austin Central Library). This project tracks the build of an IoT LED Matrix that virtual attendees can control via Discord commands.
+WrangLED is a highly-interactive build log and project management dashboard for the PyTexas 2026 conference (April 17–19, 2026 at the Austin Central Library). This project tracks the build of an IoT LED Matrix that virtual attendees can control via Discord commands.
 
 This React application was built using Vite and currently acts as the Command Center for our 6-day sprint.
 
