@@ -122,41 +122,6 @@ export default function App() {
     <AuthGate>
       <div className="mobile-shell">
         <GlobalBar
-          group={group}
-          onGroupChange={setGroup}
-          groups={groups}
-          brightness={brightness}
-          onBrightnessChange={handleBrightnessChange}
-          speed={speed}
-          onSpeedChange={setSpeed}
-          color={color}
-          onColorChange={(hex) => {
-            setColor(hex);
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            const rgb = { r, g, b };
-            // If a matrix mode is active, just update its color config (no broadcast)
-            api.getMode().then((m) => {
-              if (m?.mode && m.mode !== 'idle') {
-                api.updateModeConfig({ mode: m.mode, color: rgb }).catch(() => {});
-                return;
-              }
-              // Idle mode — re-send last command with new color, or solid color
-              const last = lastCommandRef.current;
-              if (last) {
-                const updated = { ...last, color: rgb, brightness };
-                api.broadcastCommand(group, updated).catch(() => {});
-                lastCommandRef.current = updated;
-              } else {
-                api.broadcastCommand(group, { kind: 'color', color: rgb, brightness }).catch(() => {});
-              }
-            }).catch(() => {});
-          }}
-          onKill={handleKill}
-          deviceCount={deviceCount}
-          discordActive={discordActive}
-        />
         <main className="tab-content">
           {tab === 'command' && <CommandView group={group} color={color} brightness={brightness} speed={speed} onCommandSent={trackCommand} />}
           {tab === 'text' && <TextView group={group} color={color} brightness={brightness} speed={speed} onCommandSent={trackCommand} />}
