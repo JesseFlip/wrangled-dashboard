@@ -9,8 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     /* ========================================================================
-       THEME — three accent palettes, one per tab
-       Edit these values to recolor the whole app
+       THEME — four accent palettes, one per tab
        ======================================================================== */
     :root {
       --bg: #0a0a0f;
@@ -33,6 +32,10 @@
       --t-1: #f97316;
       --t-2: #14b8a6;
       --t-3: #eab308;
+
+      /* Wishes Wall tab — purple/rose */
+      --wish-1: #a855f7;
+      --wish-2: #f43f5e;
 
       --ok: #22c55e;
       --warn: #f59e0b;
@@ -73,6 +76,11 @@
         radial-gradient(circle at 50% 95%, rgba(20, 184, 166, 0.08), transparent 40%),
         radial-gradient(circle at 90% 15%, rgba(234, 179, 8, 0.08), transparent 40%);
     }
+    body[data-tab="wishes"]::before {
+      background:
+        radial-gradient(circle at 20% 10%, rgba(168, 85, 247, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(244, 63, 94, 0.10), transparent 45%);
+    }
 
     main, header, footer { position: relative; z-index: 1; }
 
@@ -106,6 +114,12 @@
     }
     body[data-tab="party"] .title .accent {
       background: linear-gradient(90deg, var(--t-1), var(--t-2), var(--t-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    body[data-tab="wishes"] .title .accent {
+      background: linear-gradient(90deg, var(--wish-1), var(--wish-2));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -175,6 +189,7 @@
     body[data-tab="wrangled"] .tab[data-tab="wrangled"] { border-bottom-color: var(--w-1); }
     body[data-tab="personal"] .tab[data-tab="personal"] { border-bottom-color: var(--p-1); }
     body[data-tab="party"] .tab[data-tab="party"] { border-bottom-color: var(--t-1); }
+    body[data-tab="wishes"] .tab[data-tab="wishes"] { border-bottom-color: var(--wish-1); }
 
     /* MAIN */
     main {
@@ -250,7 +265,7 @@
       font-weight: 400;
     }
 
-    /* Tab-flavored button accents (left-edge color bar that slides in on hover) */
+    /* Tab-flavored button accents */
     .btn.accent::before {
       content: '';
       position: absolute;
@@ -265,6 +280,7 @@
     .btn.accent { --accent: var(--w-1); }
     body[data-tab="personal"] .btn.accent { --accent: var(--p-1); }
     body[data-tab="party"]    .btn.accent { --accent: var(--t-1); }
+    body[data-tab="wishes"]   .btn.accent { --accent: var(--wish-1); }
 
     /* Honoree cards have stronger color tint */
     .btn.honoree-1 { --accent: var(--t-1); border-color: rgba(249, 115, 22, 0.4); }
@@ -346,6 +362,7 @@
     }
     body[data-tab="personal"] .text-row input[type="text"]:focus { border-color: var(--p-1); }
     body[data-tab="party"]    .text-row input[type="text"]:focus { border-color: var(--t-1); }
+    body[data-tab="wishes"]   .text-row input[type="text"]:focus { border-color: var(--wish-1); }
     .text-row button {
       background: linear-gradient(135deg, var(--w-1), var(--w-2));
       color: white;
@@ -359,6 +376,81 @@
     }
     body[data-tab="personal"] .text-row button { background: linear-gradient(135deg, var(--p-1), var(--p-2)); }
     body[data-tab="party"]    .text-row button { background: linear-gradient(135deg, var(--t-1), var(--t-3)); }
+    body[data-tab="wishes"]   .text-row button { background: linear-gradient(135deg, var(--wish-1), var(--wish-2)); }
+
+    /* WISHES WALL STYLES */
+    .wish-form { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .wish-form input[type="text"], .wish-form textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 14px 16px; border-radius: 10px; font-family: inherit; font-size: 1rem; margin-bottom: 12px; resize: vertical;
+    }
+    .wish-form textarea { min-height: 80px; font-size: 1.05rem; }
+    .wish-form input:focus, .wish-form textarea:focus { outline: none; border-color: #a855f7; }
+    .char-count { text-align: right; font-size: 0.78rem; color: var(--muted); margin: -8px 0 12px; font-family: 'JetBrains Mono', monospace; }
+    .char-count.warn { color: var(--warn); }
+    .quick-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .quick-row .lbl { font-size: 0.78rem; color: var(--muted); align-self: center; margin-right: 4px; }
+    .chip {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: inherit;
+      font-size: 0.82rem; transition: all 0.15s;
+    }
+    .chip:hover { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+    .chip.lang { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    .send-big {
+      width: 100%; background: linear-gradient(135deg, #a855f7, #f43f5e); color: white; border: none;
+      padding: 18px; border-radius: 12px; cursor: pointer; font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600; font-size: 1.1rem; transition: all 0.15s; margin-top: 6px;
+    }
+    .send-big:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); }
+    .send-big:disabled { opacity: 0.5; cursor: not-allowed; }
+    .now-scrolling {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(244, 63, 94, 0.1));
+      border: 1px solid rgba(168, 85, 247, 0.4); padding: 14px 18px; border-radius: 12px;
+      margin-top: 14px; font-size: 0.92rem; display: none;
+    }
+    .now-scrolling .pulse {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #a855f7; margin-right: 8px; vertical-align: middle;
+      animation: livePulse 1.4s infinite ease-in-out;
+    }
+    @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .now-scrolling .label {
+      font-size: 0.74rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; display: block;
+    }
+    .wish-history { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px; max-height: 400px; overflow-y: auto; }
+    .wish-history .empty { color: var(--muted); text-align: center; padding: 24px; font-size: 0.9rem; }
+    .wish-history-item { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .wish-history-item:last-child { border-bottom: none; }
+    .wish-history-item .text { flex: 1; word-break: break-word; }
+    .wish-history-item .name { font-size: 0.78rem; color: var(--muted); margin-bottom: 2px; }
+    .wish-history-item button { background: none; border: none; color: var(--hint); font-size: 0.78rem; cursor: pointer; padding: 4px 8px; }
+    .wish-history-item button:hover { color: var(--err); }
+
+    /* REACTIONS & LANGUAGES STYLES */
+    .reactions { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .reaction-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 16px 8px; border-radius: 12px; cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif; font-size: 0.92rem; font-weight: 500;
+      text-align: center; transition: all 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .reaction-btn .glyph { font-size: 1.6rem; line-height: 1; }
+    .reaction-btn:hover { transform: translateY(-2px) scale(1.02); border-color: var(--text); background: var(--surface-2); }
+
+    /* AI STATUS STYLE */
+    .ai-status {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(20, 184, 166, 0.08));
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+    }
 
     /* LOG (fixed bottom drawer) */
     .log-wrap {
@@ -402,6 +494,7 @@
     .log .entry .err { color: var(--err); }
     .log .entry .heart { color: var(--p-1); }
     .log .entry .party { color: var(--t-1); }
+    .log .entry .wish  { color: var(--wish-1); }
 
     /* TOAST */
     .toast {
@@ -429,6 +522,7 @@
     .toast.err  { border-left-color: var(--err); }
     .toast.love { border-left-color: var(--p-1); }
     .toast.party{ border-left-color: var(--t-1); }
+    .toast.wishes{ border-left-color: var(--wish-1); }
 
     /* Settings */
     .settings {
@@ -453,24 +547,233 @@
       font-size: 0.82rem;
     }
 
-    /* Honoree edit hint */
-    .edit-hint {
+    /* Whispers for Dorys Styles */
+    .whisper-form {
       background: var(--surface);
-      border: 1px dashed var(--border);
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
     }
-    .edit-hint code {
+    .whisper-form textarea {
+      width: 100%;
       background: var(--bg);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid var(--border);
       color: var(--text);
-      font-size: 0.78rem;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      resize: vertical;
+      min-height: 70px;
     }
+    .whisper-form textarea:focus { outline: none; border-color: var(--p-1); }
+
+    .whisper-tones, .whisper-langs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .whisper-tones .lbl, .whisper-langs .lbl {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .whisper-tone.active, .whisper-lang.active {
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+      border-color: transparent;
+      color: white;
+    }
+
+    .whisper-generate {
+      width: 100%;
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      transition: all 0.15s;
+      margin-top: 6px;
+    }
+    .whisper-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.35); }
+    .whisper-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .whisper-results {
+      margin-top: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .whisper-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .whisper-again {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      transition: all 0.15s;
+    }
+    .whisper-again:hover { border-color: var(--p-1); color: var(--p-1); }
+
+    .whisper-option {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .whisper-option:hover {
+      border-color: var(--p-1);
+      background: rgba(244, 63, 94, 0.05);
+      transform: translateX(2px);
+    }
+    .whisper-option .text {
+      flex: 1;
+      font-size: 0.98rem;
+      line-height: 1.4;
+    }
+    .whisper-option .send-icon {
+      flex: 0 0 auto;
+      color: var(--p-1);
+      font-size: 1.2rem;
+    }
+    .whisper-option:last-child { margin-bottom: 0; }
+    .whisper-option.sent {
+      border-color: var(--p-1);
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(245, 158, 11, 0.06));
+    }
+
+    .whisper-loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Global Speed Bar */
+    .speed-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .speed-label { color: var(--muted); font-size: 0.82rem; min-width: 80px; }
+    .speed-bar input[type="range"] { flex: 1; max-width: 320px; accent-color: var(--w-1); }
+    body[data-tab="personal"] .speed-bar input[type="range"] { accent-color: var(--p-1); }
+    body[data-tab="party"]    .speed-bar input[type="range"] { accent-color: var(--t-1); }
+    body[data-tab="wishes"]   .speed-bar input[type="range"] { accent-color: var(--wish-1); }
+    .speed-readout { display: inline-flex; align-items: center; gap: 8px; min-width: 100px; }
+    .speed-readout #globalSpeedVal {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      min-width: 30px;
+      text-align: right;
+    }
+    .speed-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Auto-Shuffle Mode */
+    .shuffle-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; }
+    .toggle-switch {
+      position: relative; display: inline-block; width: 48px; height: 26px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 999px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      left: 3px; bottom: 3px; width: 20px; height: 20px;
+      background: white; border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, var(--p-1), var(--p-2));
+    }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+    .shuffle-status {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--p-1);
+      animation: pulse-shuffle 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-shuffle { 0%,100% { opacity: 1; transform: scale(1) } 50% { opacity: 0.4; transform: scale(0.7) } }
+    .shuffle-progress { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+
+    /* Whisper Errors */
+    .whisper-error {
+      padding: 14px 16px;
+      background: rgba(244, 63, 94, 0.06);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: 10px;
+      font-size: 0.88rem;
+    }
+    .whisper-error-title {
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .whisper-error-body {
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .whisper-error-link {
+      display: inline-block;
+      color: var(--p-1);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .whisper-error-link:hover { text-decoration: underline; }
 
     @media (max-width: 600px) {
       header { padding: 16px 18px 12px; }
@@ -496,7 +799,17 @@
     <button class="tab active" data-tab="wrangled">WrangLED</button>
     <button class="tab" data-tab="personal">Jesse &amp; Dorys</button>
     <button class="tab" data-tab="party">Triple Birthday</button>
+    <button class="tab" data-tab="wishes">Wishes Wall</button>
   </nav>
+
+  <div class="speed-bar" role="region" aria-label="Global scroll speed">
+    <label for="globalSpeedSlider" class="speed-label">Scroll speed</label>
+    <input type="range" id="globalSpeedSlider" min="80" max="240" value="215">
+    <span class="speed-readout">
+      <span id="globalSpeedVal">215</span>
+      <span class="speed-tag" id="globalSpeedTag">fast</span>
+    </span>
+  </div>
 
   <main>
 
@@ -507,9 +820,22 @@
 
       <div class="settings">
         <div class="row">
-          <label for="apiUrl">API URL</label>
+          <label for="apiUrl">Wrangler URL</label>
           <input type="text" id="apiUrl" placeholder="http://100.80.148.20:8501">
           <button class="btn accent" style="padding: 8px 16px" onclick="saveApiUrl()">Save</button>
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <label for="anthropicKey" title="Used for AI content generation. Stored in your browser only.">Anthropic key</label>
+          <input type="password" id="anthropicKey" placeholder="sk-ant-...">
+          <button class="btn accent" style="padding: 8px 16px" onclick="saveAnthropicKey()">Save</button>
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <label for="googleKey" title="Fallback AI key. Stored in your browser only.">Google AI key</label>
+          <input type="password" id="googleKey" placeholder="Gemini API key...">
+          <button class="btn accent" style="padding: 8px 16px" onclick="saveGoogleKey()">Save</button>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--muted); margin-top: 10px; line-height: 1.5">
+          AI features are powered by Claude. Google Gemini is used as a fallback. Keys are stored in this browser only — never sent to the wrangler or to GitHub.
         </div>
       </div>
 
@@ -589,9 +915,75 @@
       </section>
 
       <section>
+        <h2>Whispers for Dorys</h2>
+        <p class="hint">Tell Claude what you're trying to say. Get three options. Pick one to scroll.</p>
+
+        <div class="whisper-form">
+          <textarea id="whisperIntent" placeholder="e.g. she's stressed about Parker classes, or I miss her, or it's been a hard week and I want her to feel safe..."
+                    maxlength="240" rows="3"></textarea>
+          <div class="whisper-tones">
+            <span class="lbl">Tone:</span>
+            <button class="chip whisper-tone active" data-tone="tender">Tender</button>
+            <button class="chip whisper-tone" data-tone="playful">Playful</button>
+            <button class="chip whisper-tone" data-tone="proud">Proud</button>
+            <button class="chip whisper-tone" data-tone="passionate">Passionate</button>
+            <button class="chip whisper-tone" data-tone="reassuring">Reassuring</button>
+          </div>
+          <div class="whisper-langs">
+            <span class="lbl">Language:</span>
+            <button class="chip whisper-lang active" data-lang="es">Español</button>
+            <button class="chip whisper-lang" data-lang="es-en">Bilingual</button>
+            <button class="chip whisper-lang" data-lang="en">English</button>
+          </div>
+          <button class="whisper-generate" id="whisperGenBtn" onclick="generateWhispers()">
+            Generate three whispers
+          </button>
+        </div>
+
+        <div id="whisperResults" class="whisper-results" style="display: none">
+          <div class="whisper-results-header">
+            <span>Pick one to scroll:</span>
+            <button class="whisper-again" onclick="generateWhispers()">↻ Try three more</button>
+          </div>
+          <div id="whisperOptions"></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="shuffle-row">
+          <div>
+            <h2 style="margin: 0">Auto-shuffle mode</h2>
+            <p class="hint" style="margin: 4px 0 0">Cycles affirmations and quick-sends without repeating until all 14 have played.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="shuffleToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="shufflePlaying" class="shuffle-status" style="display: none">
+          <span class="pulse-dot"></span>
+          <span>Now playing: <span id="shuffleNowText"></span></span>
+          <span class="shuffle-progress" id="shuffleProgress"></span>
+        </div>
+      </section>
+
+      <section>
         <h2>Wyatt mode</h2>
         <p class="hint">Because the dog deserves LEDs too.</p>
         <div class="grid" id="wyattScenes"></div>
+      </section>
+
+      <section>
+        <h2>Brightness</h2>
+        <p class="hint">Set just the matrix brightness without changing anything else.</p>
+        <div class="slider-row">
+          <label for="loveBrightness">Level</label>
+          <input type="range" id="loveBrightness" min="0" max="200" value="100">
+          <span class="val" id="loveBrightnessVal">100</span>
+        </div>
+        <button class="btn accent" style="margin-top: 10px; padding: 12px 20px;
+                background: linear-gradient(135deg, var(--p-1), var(--p-2)); color: white; border: none"
+                onclick="sendLoveBrightness()">Set brightness</button>
       </section>
     </div>
 
@@ -600,15 +992,9 @@
     <!-- ================================================================== -->
     <div class="pane" data-pane="party">
 
-      <div class="edit-hint">
-        Edit the three honoree names + signature messages by changing
-        <code>PARTY.honorees</code> in this file's
-        <code>&lt;script&gt;</code> block — then commit and push from Antigravity.
-      </div>
-
       <section>
         <h2>Honoree spotlights</h2>
-        <p class="hint">Each honoree gets a signature color (coral, teal, mustard) and a personal scroll.</p>
+        <p class="hint">Each honoree gets a signature color and a personal scroll.</p>
         <div class="grid wide" id="honorees"></div>
       </section>
 
@@ -619,11 +1005,83 @@
       </section>
 
       <section>
+        <h2>Reactions</h2>
+        <p class="hint">Mid-toast room participation. Tap and the matrix shouts back.</p>
+        <div class="reactions" id="reactions"></div>
+      </section>
+
+      <section>
+        <h2>Wishes around the world</h2>
+        <p class="hint">Multi-lingual love for each honoree. Plus a 🎲 surprise option.</p>
+        <div class="grid wide" id="languages"></div>
+        <button class="btn accent" style="width: 100%; margin-top: 10px; text-align: center; padding: 18px;" onclick="sendRandomLanguage()">🎲 Surprise</button>
+      </section>
+
+      <section>
+        <h2>Honor them</h2>
+        <p class="hint">Personal one-liners written for each of them. Tap for a random fun fact.</p>
+        <div class="grid wide" id="funFacts"></div>
+      </section>
+
+      <section>
+        <h2>AI surprise generator</h2>
+        <p class="hint">Tap a button — Claude writes a brand-new one-liner about that honoree on the spot, and the matrix scrolls it. Every tap is different.</p>
+        <div class="grid wide" id="aiGenButtons"></div>
+        <div id="aiStatus" class="ai-status" style="display: none"></div>
+      </section>
+
+      <section>
         <h2>Custom toast</h2>
         <p class="hint">Type a celebratory line and send it to the matrix in gold.</p>
         <div class="text-row">
           <input type="text" id="partyText" placeholder="¡Salud y feliz cumpleaños!">
           <button onclick="sendPartyText()">Send toast</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- TAB 4: WISHES WALL — guest participation                           -->
+    <!-- ================================================================== -->
+    <div class="pane" data-pane="wishes">
+      <section>
+        <h2>Send a birthday wish to the matrix</h2>
+        <p class="hint">Whatever you type lights up across the LED panels for everyone to see. Pass your phone around — let everyone send one.</p>
+        
+        <div class="wish-form">
+          <input type="text" id="wishName" placeholder="Your name (optional)" maxlength="40">
+          <textarea id="wishText" placeholder="Your wish for the birthday trio..." maxlength="180" rows="3"></textarea>
+          <div class="char-count" id="wishCharCount">0 / 180</div>
+
+          <div class="quick-row">
+            <span class="lbl">Wishing:</span>
+            <button class="chip" onclick="prefillHonoree('Ryan')">Ryan</button>
+            <button class="chip" onclick="prefillHonoree('Irene')">Irene</button>
+            <button class="chip" onclick="prefillHonoree('Emily')">Emily</button>
+            <button class="chip" onclick="prefillHonoree('Ryan, Irene, and Emily')">All three</button>
+          </div>
+
+          <div class="quick-row">
+            <span class="lbl">Language:</span>
+            <button class="chip lang" onclick="prefillLang('en')">EN</button>
+            <button class="chip lang" onclick="prefillLang('es')">ES</button>
+            <button class="chip lang" onclick="prefillLang('zh')">中文</button>
+          </div>
+
+          <button class="send-big" id="wishSendBtn" onclick="sendWish()">✨ Send wish to the matrix ✨</button>
+
+          <div class="now-scrolling" id="nowScrolling">
+            <span class="label">Currently on the matrix</span>
+            <span class="pulse"></span> <span id="scrollingText">...</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Your wishes tonight</h2>
+        <p class="hint">A record of what you've sent from this device. Only you can see this.</p>
+        <div class="wish-history" id="wishHistory">
+          <!-- history items render here -->
         </div>
       </section>
     </div>
@@ -646,10 +1104,7 @@
 
   <script>
   /* ============================================================
-     CONFIG — auto-detect API URL based on how the page is served
-     If served from the Pi (http://100.80.148.20:8501), use same origin.
-     If opened as a local file (file://...), fall back to Tailscale IP.
-     User can override via the "API URL" field on the WrangLED tab.
+     CONFIG — auto-detect API URL
      ============================================================ */
   const FALLBACK_API = 'http://100.80.148.20:8501';
   let apiUrl = (function() {
@@ -659,12 +1114,21 @@
     return location.origin;
   })();
 
-  // Auto-discovered on connect — populated by pingApi()
+  const SPEED_KEY = 'globalScrollSpeed';
+  window.getGlobalSpeed = () => +(localStorage.getItem(SPEED_KEY) || 215);
+
+  function setConn(state, text) {
+    const el = document.getElementById('conn');
+    if (el) el.dataset.state = state;
+    const txt = document.getElementById('connText');
+    if (txt) txt.textContent = text;
+  }
+
   let currentMac = null;
   let currentDevice = null;
 
   /* ============================================================
-     COLORS — the canonical palette used across scenes
+     COLORS — canonical palette
      ============================================================ */
   const C = {
     red:    { r: 220, g: 38,  b: 38  },
@@ -686,8 +1150,11 @@
     candle: { r: 255, g: 140, b: 60  }
   };
 
+  const WISH_COLORS = [C.gold, C.coral, C.teal, C.rose, C.purple, C.pink];
+  let colorIdx = 0;
+
   /* ============================================================
-     WRANGLED TAB DATA — colors, effects
+     DATA OBJECTS
      ============================================================ */
   const SWATCHES = [
     { name: 'red',    color: C.red    },
@@ -702,6 +1169,7 @@
     { name: 'rose',   color: C.rose   },
     { name: 'white',  color: C.white  }
   ];
+  
   const EFFECTS = [
     { id: 'solid',     label: 'Solid'     },
     { id: 'breathe',   label: 'Breathe'   },
@@ -713,8 +1181,6 @@
     { id: 'sweep',     label: 'Sweep'     }
   ];
 
-  // Curated subset of the wrangler's built-in presets (full list in
-  // ~/wrangled/packages/contracts/src/wrangled_contracts/commands.py)
   const PRESETS = [
     { id: 'party',         label: '🎉 Party'        },
     { id: 'chill',         label: '🌊 Chill'        },
@@ -726,135 +1192,119 @@
     { id: 'zen',           label: '🧘 Zen'          }
   ];
 
-  /* ============================================================
-     PERSONAL TAB DATA — Jesse & Dorys scenes
-     Edit these freely — `commands` is an array run in sequence.
-     ============================================================ */
   const PERSONAL = {
     moods: [
-      { id: 'goodMorning', label: '☀ Good morning', sub: 'warm amber breathe',
+      { id: 'goodMorning', label: '🌅 Good Morning', sub: 'warm amber breathe',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.warm, speed: 80, brightness: 200 },
-          { kind: 'text', text: 'Buenos días, mi amor', color: C.amber, speed: 225 }
+          { kind: 'effect', name: 'breathe', color: { r: 255, g: 140, b: 50 }, speed: 30, brightness: 80 },
+          { kind: 'text', text: 'Buenos dias, mi amor', color: { r: 255, g: 180, b: 80 }, speed: getGlobalSpeed() }
         ] },
-      { id: 'goodnight', label: '☾ Goodnight', sub: 'deep purple slow',
+      { id: 'coffeeTime', label: '☕ Coffee Time', sub: 'warm coffee glow',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.indigo, speed: 50, brightness: 120 },
-          { kind: 'text', text: 'Buenas noches, te amo', color: C.purple, speed: 200 }
+          { kind: 'color', color: { r: 180, g: 100, b: 40 }, brightness: 90 },
+          { kind: 'text', text: 'Coffee is ready!', color: { r: 255, g: 200, b: 120 }, speed: getGlobalSpeed() }
         ] },
-      { id: 'dateNight', label: '♥ Date night', sub: 'slow rose pulse',
+      { id: 'dateNight', label: '💑 Date Night', sub: 'slow rose pulse',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.rose, speed: 60, brightness: 180 }
+          { kind: 'effect', name: 'breathe', color: { r: 220, g: 20, b: 80 }, speed: 35, brightness: 70 }
         ] },
-      { id: 'coffeeTime', label: '☕ Coffee time', sub: 'warm amber sparkle',
+      { id: 'goodnight', label: '🌙 Goodnight', sub: 'deep purple slow',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.amber, speed: 150, brightness: 200 }
+          { kind: 'effect', name: 'breathe', color: { r: 40, g: 20, b: 120 }, speed: 20, brightness: 40 },
+          { kind: 'text', text: 'Buenas noches, te amo', color: { r: 180, g: 140, b: 255 }, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
-      { id: 'celebration', label: '✦ Celebration', sub: 'rainbow fireworks',
+      { id: 'celebration', label: '🎉 Celebration', sub: 'rainbow burst',
         commands: [
-          { kind: 'effect', name: 'fireworks', color: C.yellow, speed: 220, brightness: 200 }
+          { kind: 'effect', name: 'rainbow', speed: 240, brightness: 200 }
         ] },
-      { id: 'calm', label: '◐ Calm', sub: 'slow blue breathe',
+      { id: 'calm', label: '🧘 Calm', sub: 'slow blue breathe',
         commands: [
-          { kind: 'effect', name: 'breathe', color: C.blue, speed: 40, brightness: 150 }
+          { kind: 'effect', name: 'breathe', color: { r: 0, g: 100, b: 180 }, speed: 20, brightness: 60 }
         ] },
-      { id: 'motivation', label: '▲ Motivation', sub: 'orange sparkle + text',
+      { id: 'motivation', label: '💪 Motivation', sub: 'amber chase + cheer',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.coral, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'You got this', color: C.coral, speed: 220 }
+          { kind: 'effect', name: 'chase', color: { r: 255, g: 180, b: 0 }, speed: 180, brightness: 160 },
+          { kind: 'text', text: 'You got this!', color: { r: 255, g: 220, b: 0 }, speed: getGlobalSpeed() }
         ] },
-      { id: 'wyattWalk', label: '🦴 Wyatt walk', sub: 'sparkly green',
+      { id: 'wyattWalk', label: '🐕 Wyatt Walk', sub: 'sparkly cyan',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: C.green, speed: 220 }
+          { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: getGlobalSpeed() }
         ] }
     ],
-
     affirmations: [
-      { es: 'Dorys, eres mi todo',           en: 'You are my everything' },
-      { es: 'Estoy muy orgulloso de ti',     en: "I'm so proud of you" },
-      { es: 'Tu fuerza me inspira',          en: 'Your strength inspires me' },
-      { es: 'Escogería amarte otra vez',     en: "I'd choose to love you again" },
-      { es: 'Eres mi compañera',             en: 'You are my partner' },
-      { es: 'Te amo profundamente',          en: 'I love you deeply' },
-      { es: 'Cada día contigo es un regalo', en: 'Every day with you is a gift' },
-      { es: 'Mi corazón es tuyo',            en: 'My heart is yours' }
+      { emoji: '💖', es: 'Dorys, eres mi todo',                  en: 'You are my everything' },
+      { emoji: '🌟', es: 'Estoy muy orgulloso de ti',            en: 'I am so proud of you' },
+      { emoji: '🌹', es: 'Eres hermosa por dentro y por fuera',  en: 'Beautiful inside and out' },
+      { emoji: '💪', es: 'Tu fuerza me inspira cada dia',        en: 'Your strength inspires me every day' },
+      { emoji: '🏠', es: 'Contigo cualquier lugar es hogar',     en: 'Anywhere with you is home' },
+      { emoji: '✨', es: 'Eres lo mejor que me ha pasado',       en: 'Best thing that ever happened to me' },
+      { emoji: '🫶', es: 'Te admiro mucho, mi amor',             en: 'I admire you so much, my love' },
+      { emoji: '🌅', es: 'Cada dia contigo es un regalo',        en: 'Every day with you is a gift' },
+      { emoji: '💍', es: 'Escogeria amarte otra vez',            en: 'I would choose to love you again' },
+      { emoji: '🦋', es: 'You are becoming something amazing, Dorys', en: 'English' }
     ],
-
     quickSends: [
-      { label: 'Te amo',         text: 'Te amo' },
-      { label: 'Buenas noches',  text: 'Buenas noches' },
-      { label: 'Cada día mejor', text: 'Cada día mejor' },
+      { label: 'Te amo',         text: 'Te amo, mi amor' },
+      { label: 'Buenas noches',  text: 'Buenas noches, mi reina' },
+      { label: 'Every day better', text: 'You make every day better' },
       { label: 'I believe in you', text: 'I believe in you' }
     ],
-
     wyatt: [
-      { id: 'walkTime', label: '🦴 Walk time!',
+      { id: 'walkTime', label: '🐕 Walk Time!',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.cyan, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Walk time Wyatt!', color: C.cyan, speed: 225 }
+          { kind: 'effect', name: 'sparkle', color: { r: 100, g: 200, b: 255 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Walk time Wyatt!', color: { r: 100, g: 220, b: 255 }, speed: getGlobalSpeed() }
         ] },
-      { id: 'treatTime', label: '🥩 Treat time!',
+      { id: 'treatTime', label: '🥩 Treat Time!',
         commands: [
-          { kind: 'effect', name: 'fireworks', color: C.warm, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Treat time Wyatt!', color: C.warm, speed: 220 }
+          { kind: 'effect', name: 'fireworks', color: { r: 255, g: 200, b: 80 }, speed: 200, brightness: 150 },
+          { kind: 'text', text: 'Treat time Wyatt!', color: { r: 255, g: 180, b: 50 }, speed: getGlobalSpeed() }
         ] },
-      { id: 'goodBoy', label: '🐾 Good boy!',
+      { id: 'goodBoy', label: '🐾 Good Boy!',
         commands: [
-          { kind: 'effect', name: 'sparkle', color: C.green, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Good boy Wyatt!', color: C.green, speed: 225 }
+          { kind: 'effect', name: 'sparkle', color: { r: 80, g: 255, b: 80 }, speed: 180, brightness: 150 },
+          { kind: 'text', text: 'Good boy Wyatt!', color: { r: 100, g: 255, b: 100 }, speed: getGlobalSpeed() }
         ] }
     ]
   };
 
-  /* ============================================================
-     PARTY TAB DATA — Triple Birthday Party
-     EDIT THE THREE HONOREE NAMES BELOW once you know who the trio is.
-     Each honoree has a signature color (coral / teal / mustard) and
-     a custom message that scrolls when you hit their button.
-     ============================================================ */
   const PARTY = {
     honorees: [
-      { slot: 1, name: 'Honoree 1', message: '¡Feliz cumpleaños [name]!', color: C.coral },
-      { slot: 2, name: 'Honoree 2', message: '¡Feliz cumpleaños [name]!', color: C.teal  },
-      { slot: 3, name: 'Honoree 3', message: '¡Feliz cumpleaños [name]!', color: C.gold  }
+      { slot: 1, name: 'Ryan',  message: 'Happy 43 Ryan — beyond the answer to life!', matrixMessage: 'Happy 43 Ryan — beyond the answer to life!', color: C.coral },
+      { slot: 2, name: 'Irene', message: '生日快樂 Irene · Made with love',            matrixMessage: 'Sheng ri kuai le Irene · Made with love', color: C.teal  },
+      { slot: 3, name: 'Emily', message: 'Happy Birthday Emily — set sail!',          matrixMessage: 'Happy Birthday Emily — set sail!',          color: C.gold  }
     ],
-
     scenes: [
       { id: 'welcome', label: '✦ Welcome guests', sub: 'warm coral pulse',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 90, brightness: 200 },
-          { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: 220 }
+          { kind: 'text', text: '¡Bienvenidos!', color: C.coral, speed: getGlobalSpeed() }
         ] },
-      { id: 'trio', label: '◉ Trio rotation', sub: 'coral → teal → mustard',
+      { id: 'trio', label: '◉ Trio rotation', sub: 'plasma trio colors',
         commands: [
           { kind: 'effect', name: 'plasma', color: C.coral, speed: 180, brightness: 200 },
-          { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: 220 }
+          { kind: 'text', text: 'Triple Birthday', color: C.gold, speed: getGlobalSpeed() }
         ] },
       { id: 'happyBirthday', label: '★ Happy Birthday!', sub: 'celebratory pulse',
         commands: [
           { kind: 'effect', name: 'sparkle', color: C.gold, speed: 200, brightness: 200 },
-          { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: 220 }
+          { kind: 'text', text: 'Happy Birthday!', color: C.gold, speed: getGlobalSpeed() }
         ] },
       { id: 'candles', label: '🕯 Cake & candles', sub: 'warm flicker',
         commands: [
           { kind: 'effect', name: 'fireworks', color: C.candle, speed: 130, brightness: 200 },
-          { kind: 'text', text: 'Make a wish', color: C.candle, speed: 200 }
+          { kind: 'text', text: 'Make a wish', color: C.candle, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
       { id: 'toast', label: '🥂 Toast time', sub: 'elegant gold pulse',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.gold, speed: 70, brightness: 200 },
-          { kind: 'text', text: '¡Salud!', color: C.gold, speed: 200 }
+          { kind: 'text', text: '¡Salud!', color: C.gold, speed: Math.min(getGlobalSpeed(), 200) }
         ] },
       { id: 'hotpot', label: '🍲 Hot pot ready', sub: 'warm amber simmer',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.coral, speed: 100, brightness: 200 },
-          { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: 220 }
-        ] },
-      { id: 'photo', label: '📸 Photo time', sub: 'bright white flash',
-        commands: [
-          { kind: 'effect', name: 'sparkle', color: C.white, speed: 240, brightness: 200 },
-          { kind: 'text', text: 'Photo time!', color: C.white, speed: 240 }
+          { kind: 'text', text: 'Hot pot is ready!', color: C.coral, speed: getGlobalSpeed() }
         ] },
       { id: 'dance', label: '♫ Dance floor', sub: 'rainbow cycle',
         commands: [
@@ -863,16 +1313,71 @@
       { id: 'windDown', label: '☾ Wind down', sub: 'soft purple breathe',
         commands: [
           { kind: 'effect', name: 'breathe', color: C.purple, speed: 50, brightness: 130 },
-          { kind: 'text', text: 'Good night, friends', color: C.purple, speed: 200 }
+          { kind: 'text', text: 'Good night, friends', color: C.purple, speed: Math.min(getGlobalSpeed(), 200) }
         ] }
-    ]
+    ],
+    reactions: [
+      { id: 'cheers',  glyph: '🥂', label: 'Cheers!', text: '¡Salud! Cheers!',   color: C.gold,   effect: 'breathe',   speed: 100 },
+      { id: 'bravo',   glyph: '👏', label: 'Bravo!',  text: 'Bravo!',            color: C.coral,  effect: 'sparkle',   speed: 200 },
+      { id: 'aww',     glyph: '❤',  label: 'Aww',    text: 'Awwww ♥',           color: C.rose,   effect: 'breathe',   speed: 80  },
+      { id: 'encore',  glyph: '🎵', label: 'Encore!', text: 'Encore! Encore!',   color: C.purple, effect: 'sparkle',   speed: 220 },
+      { id: 'speech',  glyph: '🎤', label: 'Speech!', text: 'Speech! Speech!',   color: C.teal,   effect: 'sparkle',   speed: 200 },
+      { id: 'hype',    glyph: '🎂', label: 'Hype!',  text: '★ Birthday Hype ★', color: C.yellow, effect: 'fireworks', speed: 220 }
+    ],
+    languages: [
+      { honoree: 'Ryan',  lang: 'EN',   text: 'Happy birthday Ryan!',     color: C.coral },
+      { honoree: 'Ryan',  lang: 'ES',   text: '¡Feliz cumpleaños Ryan!',  color: C.coral },
+      { honoree: 'Ryan',  lang: '中文', text: 'Ryan 生日快樂!',           matrixText: 'Ryan Sheng ri kuai le!',   color: C.coral },
+      { honoree: 'Irene', lang: 'EN',   text: 'Happy birthday Irene!',    color: C.teal  },
+      { honoree: 'Irene', lang: 'ES',   text: '¡Feliz cumpleaños Irene!', color: C.teal  },
+      { honoree: 'Irene', lang: '中文', text: '生日快樂 Irene!',           matrixText: 'Sheng ri kuai le Irene!',  color: C.teal  },
+      { honoree: 'Emily', lang: 'EN',   text: 'Happy birthday Emily!',    color: C.gold  },
+      { honoree: 'Emily', lang: 'ES',   text: '¡Feliz cumpleaños Emily!', color: C.gold  },
+      { honoree: 'Emily', lang: '中文', text: '生日快樂 Emily!',           matrixText: 'Sheng ri kuai le Emily!',  color: C.gold  }
+    ],
+    facts: {
+      Ryan: {
+        color: C.coral,
+        lines: [
+          'Ryan survived his "answer to everything" year. Today he turns 43!',
+          'Cheers to Ryan — 43 and leveling up the infrastructure.',
+          "Ryan's IT team would follow him into a server room fire.",
+          'Forty-three is the new forty-two. Don\'t panic.',
+          'In every multiverse, Ryan is the VP we deserve.',
+          'Ryan: zero dropped tickets, infinite vibes.',
+          'Hitchhikers, your guide turns 43 tonight.'
+        ]
+      },
+      Irene: {
+        color: C.teal,
+        lines: [
+          'Irene makes everything she touches better.',
+          'Irene — thoughtful, talented, the reason this kitchen smells incredible.',
+          'Cheers to Irene, who turns ingredients into love.',
+          'Irene crafts the things we get to keep forever.',
+          'Wherever Irene is, the room is warmer.',
+          'Irene: maker of meals, memories, and Emily.',
+          'Xiexie Irene — you are our pride'
+        ]
+      },
+      Emily: {
+        color: C.gold,
+        lines: [
+          "Emily's heart set sail for the Grand Line a long time ago.",
+          'Emily — King of the Pirates in training.',
+          'The One Piece is the friends we made along the way. Emily already gets it.',
+          'Emily knows every Strawhat by heart. Tonight we celebrate the captain.',
+          'Set sail Emily — your nakama are right here.',
+          "Anime taught Emily what Hollywood couldn't.",
+          'Today the Going Merry sails for cake.'
+        ]
+      }
+    }
   };
 
   /* ============================================================
-     RENDER — generate buttons from data
+     RENDER ENGINE
      ============================================================ */
-  function rgbCss(c) { return `rgb(${c.r}, ${c.g}, ${c.b})`; }
-
   function renderSwatches() {
     const root = document.getElementById('swatches');
     root.innerHTML = '';
@@ -880,8 +1385,7 @@
       const el = document.createElement('button');
       el.className = 'swatch';
       el.style.background = rgbCss(s.color);
-      el.title = s.name;
-      el.onclick = () => setColor(s.color);
+      el.onclick = () => sendCommand({ kind: 'color', color: s.color, brightness: getBrightness() });
       root.appendChild(el);
     });
     const off = document.createElement('button');
@@ -898,11 +1402,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = e.label;
-      btn.onclick = () => sendCommand({
-        kind: 'effect', name: e.id,
-        speed: getSpeed(),
-        brightness: getBrightness()
-      });
+      btn.onclick = () => sendCommand({ kind: 'effect', name: e.id, speed: getSpeed(), brightness: getBrightness() });
       root.appendChild(btn);
     });
   }
@@ -914,10 +1414,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = p.label;
-      btn.onclick = () => {
-        sendCommand({ kind: 'preset', name: p.id });
-        toast(p.label);
-      };
+      btn.onclick = () => sendCommand({ kind: 'preset', name: p.id });
       root.appendChild(btn);
     });
   }
@@ -940,10 +1437,10 @@
     PERSONAL.affirmations.forEach(a => {
       const btn = document.createElement('button');
       btn.className = 'btn accent';
-      btn.innerHTML = `${a.es}<span class="sub">${a.en}</span>`;
+      btn.innerHTML = `${a.emoji} ${a.es}<span class="sub">${a.en}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
-        { kind: 'text', text: a.es, color: C.soft, speed: 220 }
+        { kind: 'text', text: a.es, color: C.soft, speed: getGlobalSpeed() }
       ], a.es, 'love');
       root.appendChild(btn);
     });
@@ -956,9 +1453,7 @@
       const btn = document.createElement('button');
       btn.className = 'btn accent';
       btn.textContent = q.label;
-      btn.onclick = () => runCommands([
-        { kind: 'text', text: q.text, color: C.rose, speed: 220 }
-      ], q.text, 'love');
+      btn.onclick = () => sendCommand({ kind: 'text', text: q.text, color: C.rose, speed: getGlobalSpeed() });
       root.appendChild(btn);
     });
   }
@@ -981,70 +1476,689 @@
     PARTY.honorees.forEach(h => {
       const btn = document.createElement('button');
       btn.className = `btn accent honoree-${h.slot}`;
-      const msg = h.message.replace('[name]', h.name);
-      btn.innerHTML = `${h.name}<span class="sub">${msg}</span>`;
+      const matrixMsg = (h.matrixMessage || h.message);
+      btn.innerHTML = `${h.name}<span class="sub">${h.message}</span>`;
       btn.onclick = () => runCommands([
         { kind: 'effect', name: 'breathe', color: h.color, speed: 100, brightness: 200 },
-        { kind: 'text', text: msg, color: h.color, speed: 220 }
-      ], `${h.name}: ${msg}`, 'party');
+        { kind: 'text', text: matrixMsg, color: h.color, speed: getGlobalSpeed() }
+      ], `${h.name} Spotlight`, 'party');
       root.appendChild(btn);
     });
   }
 
-  function renderPartyScenes() {
-    const root = document.getElementById('partyScenes');
+  function renderReactions() {
+    const root = document.getElementById('reactions');
     root.innerHTML = '';
-    PARTY.scenes.forEach(s => {
+    PARTY.reactions.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'reaction-btn';
+      btn.innerHTML = `<span class="glyph">${r.glyph}</span><span>${r.label}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: r.effect, color: r.color, speed: r.speed, brightness: 200 },
+        { kind: 'text', text: r.text, color: r.color, speed: getGlobalSpeed() }
+      ], r.label, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderLanguages() {
+    const root = document.getElementById('languages');
+    root.innerHTML = '';
+    PARTY.languages.forEach(l => {
       const btn = document.createElement('button');
       btn.className = 'btn accent';
-      btn.innerHTML = `${s.label}<span class="sub">${s.sub}</span>`;
-      btn.onclick = () => runCommands(s.commands, s.label, 'party');
+      btn.innerHTML = `${l.honoree} · ${l.lang}<span class="sub">${l.text}</span>`;
+      btn.onclick = () => runCommands([
+        { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
+        { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: getGlobalSpeed() }
+      ], `${l.honoree} (${l.lang})`, 'party');
+      root.appendChild(btn);
+    });
+  }
+
+  function renderFunFacts() {
+    const root = document.getElementById('funFacts');
+    root.innerHTML = '';
+    Object.keys(PARTY.facts).forEach((name, i) => {
+      const f = PARTY.facts[name];
+      const btn = document.createElement('button');
+      btn.className = `btn accent honoree-${i+1}`;
+      btn.innerHTML = `🎲 Random fact about ${name}<span class="sub">${f.lines.length} lines available</span>`;
+      btn.onclick = () => {
+        const line = f.lines[Math.floor(Math.random() * f.lines.length)];
+        runCommands([
+          { kind: 'effect', name: 'sparkle', color: f.color, speed: 180, brightness: 200 },
+          { kind: 'text', text: line, color: f.color, speed: getGlobalSpeed() }
+        ], `Fact about ${name}`, 'party');
+      };
+      root.appendChild(btn);
+    });
+  }
+
+  function renderAiGenButtons() {
+    const root = document.getElementById('aiGenButtons');
+    root.innerHTML = '';
+    const buttons = [
+      { honoree: 'Ryan',  label: '🤖 New zinger about Ryan',       sub: 'AI-generated, never repeats', cls: 'honoree-1' },
+      { honoree: 'Irene', label: '🤖 New tribute to Irene',        sub: 'AI-generated, never repeats', cls: 'honoree-2' },
+      { honoree: 'Emily', label: '🤖 New One Piece line for Emily', sub: 'AI-generated, never repeats', cls: 'honoree-3' },
+      { honoree: null,    label: '🎲 Random honoree, random vibe', sub: 'Surprise me',                  cls: '' }
+    ];
+    buttons.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = `btn accent ${b.cls}`.trim();
+      btn.innerHTML = `${b.label}<span class="sub">${b.sub}</span>`;
+      btn.onclick = () => generateAndSend(b.honoree);
       root.appendChild(btn);
     });
   }
 
   /* ============================================================
-     COMMAND LAYER — talks to the wrangler API on the Pi
-     The wrangler exposes endpoints for color, effect, text, power.
+     WISHES WALL LOGIC
      ============================================================ */
-  async function sendCommand(cmd) {
-    if (!currentMac) {
-      log('✗ no device connected — click the status pill to rescan', 'err');
-      toast('No WLED device connected', true);
-      return null;
+  function updateCharCount() {
+    const el = document.getElementById('wishText');
+    const cnt = document.getElementById('wishCharCount');
+    const len = el.value.length;
+    cnt.textContent = `${len} / 180`;
+    cnt.classList.toggle('warn', len > 160);
+  }
+
+  function prefillHonoree(name) {
+    const el = document.getElementById('wishText');
+    el.value = `Happy birthday ${name}!`;
+    updateCharCount();
+    el.focus();
+  }
+
+  function prefillLang(code) {
+    const el = document.getElementById('wishText');
+    const samples = {
+      en: 'Happy birthday — wishing you joy this year!',
+      es: '¡Feliz cumpleaños — que tengas un año lleno de alegría!',
+      zh: 'Sheng ri kuai le — wishing you a wonderful year ahead!'
+    };
+    el.value = samples[code] || '';
+    updateCharCount();
+    el.focus();
+  }
+
+  async function sendWish() {
+    const name = document.getElementById('wishName').value.trim();
+    const wish = document.getElementById('wishText').value.trim();
+    const btn = document.getElementById('wishSendBtn');
+    
+    if (!wish) { toast('Please write a wish!', true); return; }
+    
+    const fullText = name ? `${name}: ${wish}` : wish;
+    const finalMsg = fullText.slice(0, 180);
+    const color = WISH_COLORS[colorIdx % WISH_COLORS.length];
+    colorIdx++;
+
+    btn.disabled = true;
+    btn.textContent = '✨ Sending... ✨';
+
+    const result = await runCommands([
+      { kind: 'effect', name: 'breathe', color: color, speed: 100, brightness: 200 },
+      { kind: 'text', text: finalMsg, color: color, speed: getGlobalSpeed() }
+    ], 'Wish sent!', 'wishes');
+
+    btn.disabled = false;
+    btn.textContent = '✨ Send wish to the matrix ✨';
+
+    // Save to history
+    let history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    history.unshift({ name, wish, id: Date.now() });
+    if (history.length > 25) history.pop();
+    localStorage.setItem('wishedHistory', JSON.stringify(history));
+    renderWishHistory();
+
+    // Reset UI
+    document.getElementById('wishText').value = '';
+    updateCharCount();
+    
+    const indicator = document.getElementById('nowScrolling');
+    document.getElementById('scrollingText').textContent = finalMsg;
+    indicator.style.display = 'block';
+    setTimeout(() => { indicator.style.display = 'none'; }, 30000);
+  }
+
+  function renderWishHistory() {
+    const root = document.getElementById('wishHistory');
+    const history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    if (history.length === 0) {
+      root.innerHTML = '<div class="empty">No wishes sent yet. Be the first.</div>';
+      return;
     }
-    const summary = `${cmd.kind}${cmd.name ? ':'+cmd.name : ''}${cmd.text ? ' "'+cmd.text+'"' : ''}`;
-    log(`→ ${summary}`, 'cmd');
+    root.innerHTML = history.map(h => `
+      <div class="wish-history-item">
+        <div class="text">
+          ${h.name ? `<div class="name">${h.name}</div>` : ''}
+          ${h.wish}
+        </div>
+        <button onclick="deleteWish(${h.id})">×</button>
+      </div>
+    `).join('');
+  }
+
+  function deleteWish(id) {
+    let history = JSON.parse(localStorage.getItem('wishedHistory') || '[]');
+    history = history.filter(h => h.id !== id);
+    localStorage.setItem('wishedHistory', JSON.stringify(history));
+    renderWishHistory();
+  }
+
+  function sendRandomLanguage() {
+    const l = PARTY.languages[Math.floor(Math.random() * PARTY.languages.length)];
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: l.color, speed: 100, brightness: 200 },
+      { kind: 'text', text: (l.matrixText || l.text), color: l.color, speed: getGlobalSpeed() }
+    ], `Surprise: ${l.honoree}`, 'party');
+  }
+
+  /* ============================================================
+     AI CONTENT GENERATION
+     ============================================================ */
+  async function generateAndSend(honoree) {
+    const target = honoree || ['Ryan', 'Irene', 'Emily'][Math.floor(Math.random() * 3)];
+    const apiKey = localStorage.getItem('anthropicApiKey');
+
+    if (!apiKey) {
+      toast('Add your Anthropic API key in WrangLED tab settings', true);
+      showAiHint();
+      fallbackToStaticFact(target);
+      return;
+    }
+
+    setAiStatus(`Asking Claude for a fresh line about ${target}...`);
+
     try {
-      const res = await fetch(`${apiUrl}/api/devices/${currentMac}/commands`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cmd)
-      });
-      if (!res.ok) {
-        const errText = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status}${errText ? ' ' + errText.slice(0, 100) : ''}`);
-      }
-      const result = await res.json();
-      if (result.ok) {
-        log(`✓ sent (${result.status})`, 'ok');
-      } else {
-        log(`✗ ${result.error || 'failed'}`, 'err');
-      }
-      return result;
+      const text = await callClaudeForLine(target, apiKey);
+      if (!text) throw new Error('empty response');
+
+      const cleaned = sanitizeForMatrix(text);
+      const color = PARTY.facts[target].color;
+
+      setAiStatus(`✨ Now scrolling: ${cleaned}`);
+      setTimeout(() => hideAiStatus(), 8000);
+
+      await runCommands([
+        { kind: 'effect', name: 'sparkle', color, speed: 200, brightness: 180 },
+        { kind: 'text', text: cleaned, color, speed: getGlobalSpeed() }
+      ], `AI: ${target}`, 'party');
+
     } catch (err) {
-      log(`✗ ${err.message}`, 'err');
-      setConn('err', `error: ${err.message.slice(0, 40)}`);
-      return null;
+      log(`✗ AI generation failed (${err.kind || 'unknown'}): ${err.message}`, 'err');
+      toast('AI hiccup — using a backup line', false);
+      setAiStatus('');
+      fallbackToStaticFact(target);
     }
   }
 
-  async function runCommands(commands, label, toastClass) {
-    toast(label || 'sent', false, toastClass);
-    for (const cmd of commands) {
-      await sendCommand(cmd);
-      await wait(150);
+  async function callClaudeForLine(honoree, apiKey) {
+    const profiles = {
+      Ryan: 'Ryan, turning 43, VP of IT. Loves Hitchhiker\'s Guide to the Galaxy (the answer was 42, now he is 43). Personality: dry humor, tech-savvy, leads his IT team well. Married, beloved at work.',
+      Irene: 'Irene, Taiwanese, mother of Emily. Thoughtful, talented, an excellent cook and a creative maker (crafts, sewing, art). Warm and loving. Speaks Mandarin and English.',
+      Emily: 'Emily, Irene\'s daughter, born in the US, fluent in Mandarin and English. HUGE fan of One Piece (Luffy, Strawhats, Going Merry, King of the Pirates, the Grand Line, "the One Piece is real"). Loves anime broadly. Bilingual, bicultural.'
+    };
+
+    const systemPrompt = `You are writing one-line birthday toasts for a triple-birthday party. The recipients are three friends, each with a unique personality. Your one-liner will scroll across an LED matrix in front of party guests, so it must be:
+
+- Between 80 and 140 characters (firm cap: 180).
+- Pure ASCII only — no emoji, no Chinese characters, no smart quotes, no em dashes (use a regular hyphen). Plain English (or English mixed with romanized pinyin/Spanish where it lands naturally).
+- Warm, witty, and specific to the person. Not generic. Reference what makes them them.
+- Funny in a way that lands for everyone in the room, not insider-only. Affectionate, never mean.
+- Single line. No quotation marks. No prefix like "Here's a toast:". Just the line itself.
+
+Vary your style each time — sometimes a play on words, sometimes a sweet observation, sometimes a callback to their interests. Surprise the reader.`;
+
+    const userPrompt = `Write a fresh one-line birthday toast for ${honoree}.
+
+About ${honoree}: ${profiles[honoree]}
+
+Output ONLY the one-liner. No preamble, no explanation, no quotes around it.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 200,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      let parsed = null;
+      try { parsed = JSON.parse(errBody); } catch { /* leave null */ }
+      const msg = parsed?.error?.message || errBody.slice(0, 200) || `HTTP ${res.status}`;
+      const errorType = parsed?.error?.type || 'unknown';
+      
+      const friendly = (() => {
+        if (errorType === 'invalid_request_error' && /credit balance/i.test(msg)) {
+          return { kind: 'billing', text: 'Anthropic credit balance is empty — top up at console.anthropic.com' };
+        }
+        if (errorType === 'authentication_error' || res.status === 401) {
+          return { kind: 'auth', text: 'API key rejected — check the key in WrangLED settings' };
+        }
+        if (res.status === 429) {
+          return { kind: 'rate', text: 'Rate limited — wait a minute and try again' };
+        }
+        if (errorType === 'overloaded_error' || res.status === 529) {
+          return { kind: 'overloaded', text: 'Anthropic API overloaded — try again in a moment' };
+        }
+        return { kind: 'other', text: `API error: ${msg.slice(0, 120)}` };
+      })();
+      
+      const err = new Error(friendly.text);
+      err.kind = friendly.kind;
+      err.raw = msg;
+      throw err;
     }
+
+    const data = await res.json();
+    const blocks = data.content || [];
+    const textBlock = blocks.find(b => b.type === 'text');
+    return textBlock ? textBlock.text.trim() : null;
+  }
+
+  function sanitizeForMatrix(text) {
+    let out = text
+      .replace(/^["'`]|["'`]$/g, '')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+      .replace(/[\u{1F000}-\u{1F2FF}]/gu, '')
+      .replace(/[\u{2600}-\u{27BF}]/gu, '')
+      .replace(/[\u4e00-\u9fff]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (out.length > 180) out = out.slice(0, 177) + '...';
+    return out;
+  }
+
+  function fallbackToStaticFact(honoree) {
+    const data = PARTY.facts[honoree];
+    if (!data) return;
+    const line = data.lines[Math.floor(Math.random() * data.lines.length)];
+    runCommands([
+      { kind: 'effect', name: 'sparkle', color: data.color, speed: 180, brightness: 180 },
+      { kind: 'text', text: line, color: data.color, speed: getGlobalSpeed() }
+    ], `${honoree} (offline)`, 'party');
+  }
+
+  function saveAnthropicKey() {
+    const v = document.getElementById('anthropicKey').value.trim();
+    if (!v) {
+      localStorage.removeItem('anthropicApiKey');
+      toast('Anthropic key cleared');
+      return;
+    }
+    if (!v.startsWith('sk-ant-')) {
+      toast('That doesn\'t look like an Anthropic key', true);
+      return;
+    }
+    localStorage.setItem('anthropicApiKey', v);
+    toast('Anthropic key saved (this browser only)');
+  }
+
+  /* ============================================================
+     WHISPERS FOR DORYS — AI AFFIRMATIONS
+     ============================================================ */
+  let whisperTone = 'tender';
+  let whisperLang = 'es';
+
+  function setWhisperTone(tone) {
+    whisperTone = tone;
+    document.querySelectorAll('.whisper-tone').forEach(b => {
+      b.classList.toggle('active', b.dataset.tone === tone);
+    });
+  }
+
+  function setWhisperLang(lang) {
+    whisperLang = lang;
+    document.querySelectorAll('.whisper-lang').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+  }
+
+  async function generateWhispers() {
+    const intent = document.getElementById('whisperIntent').value.trim();
+    if (!intent) {
+      toast('Tell Claude what you want to convey first', true);
+      return;
+    }
+
+    const apiKey = localStorage.getItem('anthropicApiKey');
+    if (!apiKey) {
+      toast('Add your Anthropic key in WrangLED settings', true);
+      fallbackToStaticAffirmation();
+      return;
+    }
+
+    const btn = document.getElementById('whisperGenBtn');
+    btn.disabled = true;
+    btn.textContent = 'Listening...';
+
+    const resultsEl = document.getElementById('whisperResults');
+    const optionsEl = document.getElementById('whisperOptions');
+    resultsEl.style.display = 'block';
+    optionsEl.innerHTML = '<div class="whisper-loading">Claude is whispering three options...</div>';
+
+    try {
+      const whispers = await callClaudeForWhispers(intent, whisperTone, whisperLang, apiKey);
+      if (!whispers || whispers.length === 0) throw new Error('no whispers returned');
+
+      optionsEl.innerHTML = '';
+      whispers.forEach((line, idx) => {
+        const cleaned = sanitizeForMatrix(line);
+        if (!cleaned) return;
+        const opt = document.createElement('div');
+        opt.className = 'whisper-option';
+        opt.innerHTML = `<div class="text">${cleaned.replace(/[<>]/g, '')}</div><div class="send-icon">→</div>`;
+        opt.onclick = () => sendWhisper(cleaned, opt);
+        optionsEl.appendChild(opt);
+      });
+    } catch (err) {
+      log(`Whispers failed (${err.kind || 'unknown'}): ${err.message}`, 'err');
+      
+      let helperHtml = '';
+      if (err.kind === 'billing') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Out of API credits</div>
+            <div class="whisper-error-body">${err.message}</div>
+            <a href="https://console.anthropic.com/settings/billing" target="_blank" class="whisper-error-link">Open Anthropic billing →</a>
+          </div>`;
+      } else if (err.kind === 'auth') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">API key not accepted</div>
+            <div class="whisper-error-body">Open the WrangLED tab settings and re-enter the key.</div>
+          </div>`;
+      } else if (err.kind === 'rate' || err.kind === 'overloaded') {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Try again in a moment</div>
+            <div class="whisper-error-body">${err.message}</div>
+          </div>`;
+      } else {
+        helperHtml = `
+          <div class="whisper-error">
+            <div class="whisper-error-title">Whispers couldn't generate</div>
+            <div class="whisper-error-body">${err.message}</div>
+          </div>`;
+      }
+      optionsEl.innerHTML = helperHtml;
+
+      fallbackToStaticAffirmation();
+      toast('Sent a written affirmation instead', false, 'love');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate three whispers';
+    }
+  }
+
+  async function callClaudeForWhispers(intent, tone, lang, apiKey) {
+    const toneGuidance = {
+      tender:     'tender, soft, intimate — like a hand on her shoulder',
+      playful:    'playful and light — a small smile, an inside joke energy',
+      proud:      'proud and admiring — name something specific you see in her',
+      passionate: 'passionate and warm — desire and depth, not crass',
+      reassuring: 'reassuring and steady — she is safe, you are here, this passes'
+    }[tone] || 'tender';
+
+    const langGuidance = {
+      'es':    'Spanish only. Unaccented ASCII (write "dia" not "día", "corazon" not "corazón"). The matrix font cannot render accents.',
+      'es-en': 'A short Spanish phrase followed by an English clause, separated by " - " or " | ". Both halves unaccented ASCII.',
+      'en':    'English only.'
+    }[lang];
+
+    const systemPrompt = `You are helping Jesse send a brief love message to his wife Dorys. The message will scroll across an LED matrix mounted in their home, in physical light, in a quiet moment. This is not a text message. It is a moment.
+
+About them:
+- Married. Together for years. They have a dog named Wyatt.
+- Dorys is from Latin America. Her first language is Spanish. Her love language is words of affirmation.
+- She recently navigated a long immigration process and a six-week separation for her embassy interview. She is now back home, studying ESL and starting career training at Parker.
+- They are building a life together. Jesse is in cybersecurity training (Per Scholas) after a layoff. Both are working hard for the future.
+
+Your job: given Jesse's intent and a tone, produce exactly THREE distinct one-line whispers, each between 40 and 130 characters, each ASCII-only (no emoji, no accents, no smart quotes, no em dashes — use a regular hyphen). Each whisper must be a complete thought, not a fragment.
+
+Tone guidance: ${toneGuidance}.
+Language: ${langGuidance}.
+
+The three whispers should differ in approach — perhaps one direct, one through metaphor, one through specific observation. Do not start them all the same way. Surprise the reader. Reach for warmth that lands at four-foot-tall scrolling text in a quiet room — sentiment that earns its size.
+
+Output ONLY a JSON array of three strings. No prose. No preamble. No code fences. Example shape:
+["whisper one here", "whisper two here", "whisper three here"]`;
+
+    const userPrompt = `Jesse's intent: "${intent}"
+
+Tone: ${tone}
+Language: ${lang}
+
+Output the JSON array of three whispers.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 600,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      let parsed = null;
+      try { parsed = JSON.parse(errBody); } catch { /* leave null */ }
+      const msg = parsed?.error?.message || errBody.slice(0, 200) || `HTTP ${res.status}`;
+      const errorType = parsed?.error?.type || 'unknown';
+      
+      const friendly = (() => {
+        if (errorType === 'invalid_request_error' && /credit balance/i.test(msg)) {
+          return { kind: 'billing', text: 'Anthropic credit balance is empty — top up at console.anthropic.com' };
+        }
+        if (errorType === 'authentication_error' || res.status === 401) {
+          return { kind: 'auth', text: 'API key rejected — check the key in WrangLED settings' };
+        }
+        if (res.status === 429) {
+          return { kind: 'rate', text: 'Rate limited — wait a minute and try again' };
+        }
+        if (errorType === 'overloaded_error' || res.status === 529) {
+          return { kind: 'overloaded', text: 'Anthropic API overloaded — try again in a moment' };
+        }
+        return { kind: 'other', text: `API error: ${msg.slice(0, 120)}` };
+      })();
+      
+      const err = new Error(friendly.text);
+      err.kind = friendly.kind;
+      err.raw = msg;
+      throw err;
+    }
+
+    const data = await res.json();
+    const block = (data.content || []).find(b => b.type === 'text');
+    if (!block) throw new Error('no text block in response');
+
+    let raw = block.text.trim();
+    raw = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error('could not parse whispers JSON');
+    }
+    if (!Array.isArray(parsed)) throw new Error('whispers response not an array');
+    return parsed.filter(s => typeof s === 'string' && s.length > 0).slice(0, 3);
+  }
+
+  async function sendWhisper(text, optionEl) {
+    await runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text, color: C.soft, speed: getGlobalSpeed() }
+    ], text, 'love');
+
+    document.querySelectorAll('.whisper-option').forEach(el => el.classList.remove('sent'));
+    optionEl.classList.add('sent');
+    toast('Whisper sent to Dorys', false, 'love');
+  }
+
+  function fallbackToStaticAffirmation() {
+    const list = PERSONAL.affirmations;
+    if (!list || list.length === 0) return;
+    const pick = list[Math.floor(Math.random() * list.length)];
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text: pick.es, color: C.soft, speed: getGlobalSpeed() }
+    ], pick.es, 'love');
+  }
+
+  function setAiStatus(msg) {
+    const el = document.getElementById('aiStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function hideAiStatus() { setAiStatus(''); }
+
+  function showAiHint() {
+    toast('Open the WrangLED tab → paste your Anthropic key in settings', true);
+  }
+
+  /* ============================================================
+     GLOBAL SCROLL SPEED
+     ============================================================ */
+  function describeSpeed(v) {
+    if (v <= 140) return 'slow';
+    if (v <= 200) return 'medium';
+    return 'fast';
+  }
+
+  function applyGlobalSpeed(v) {
+    const valEl = document.getElementById('globalSpeedVal');
+    const tagEl = document.getElementById('globalSpeedTag');
+    if (valEl) valEl.textContent = v;
+    if (tagEl) tagEl.textContent = describeSpeed(v);
+    localStorage.setItem(SPEED_KEY, String(v));
+  }
+
+  /* ============================================================
+     AUTO-SHUFFLE MODE
+     ============================================================ */
+  window.shuffleState = {
+    active: false,
+    pool: [],
+    remaining: [],
+    timerId: null
+  };
+
+  function estimateScrollDuration(text, speed) {
+    const pixels = text.length * 6 + 64;
+    const speedFactor = (300 - speed) / 100;
+    const seconds = (pixels / 50) * speedFactor;
+    return Math.max(3, Math.min(20, seconds)) * 1000;
+  }
+
+  function buildShufflePool() {
+    const pool = [];
+    PERSONAL.affirmations.forEach(a => pool.push({ text: a.es, type: 'affirmation' }));
+    PERSONAL.quickSends.forEach(q => pool.push({ text: q.text, type: 'quicksend' }));
+    return pool;
+  }
+
+  function fisherYates(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  async function shuffleNext() {
+    const s = window.shuffleState;
+    if (!s.active) return;
+    if (s.remaining.length === 0) {
+      s.remaining = fisherYates(s.pool);
+    }
+    const item = s.remaining.shift();
+    document.getElementById('shuffleNowText').textContent = item.text;
+    document.getElementById('shuffleProgress').textContent = `${s.pool.length - s.remaining.length}/${s.pool.length}`;
+
+    await runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text: item.text, color: C.soft, speed: getGlobalSpeed() }
+    ], item.text, 'love');
+
+    if (!s.active) return;
+    const waitTime = estimateScrollDuration(item.text, getGlobalSpeed()) + 1500;
+    s.timerId = setTimeout(shuffleNext, waitTime);
+  }
+
+  function startShuffle() {
+    window.shuffleState = {
+      active: true,
+      pool: buildShufflePool(),
+      remaining: [],
+      timerId: null
+    };
+    document.getElementById('shufflePlaying').style.display = 'flex';
+    shuffleNext();
+  }
+
+  function stopShuffle() {
+    const s = window.shuffleState;
+    if (s.timerId) clearTimeout(s.timerId);
+    s.active = false;
+    document.getElementById('shufflePlaying').style.display = 'none';
+    toast('Auto-shuffle stopped', false, 'love');
+  }
+
+  /* ============================================================
+     RESTORED TEXT SENDERS
+     ============================================================ */
+  function sendCustomText() {
+    const el = document.getElementById('customText');
+    const text = el.value.trim();
+    if (!text) return;
+    sendCommand({ kind: 'text', text, color: C.cyan, speed: getGlobalSpeed() });
+    toast('Sent custom text');
+  }
+
+  function sendPersonalText() {
+    const el = document.getElementById('personalText');
+    const text = el.value.trim();
+    if (!text) return;
+    runCommands([
+      { kind: 'effect', name: 'breathe', color: C.rose, speed: 80, brightness: 180 },
+      { kind: 'text', text, color: C.soft, speed: getGlobalSpeed() }
+    ], text, 'love');
+  }
+
+  function sendPartyText() {
+    const el = document.getElementById('partyText');
+    const text = el.value.trim();
+    if (!text) return;
+    sendCommand({ kind: 'text', text, color: C.gold, speed: getGlobalSpeed() });
+    toast('Sent toast', false, 'party');
   }
 
   function runScene(name) {
@@ -1053,108 +2167,6 @@
         { kind: 'power', on: true },
         { kind: 'effect', name: 'solid', color: C.white, brightness: 100 }
       ], 'reset', null);
-    }
-  }
-
-  function setColor(color) {
-    sendCommand({
-      kind: 'color',
-      color,
-      brightness: getBrightness()
-    });
-  }
-
-  function sendCustomText() {
-    const txt = document.getElementById('customText').value.trim();
-    if (!txt) return;
-    sendCommand({
-      kind: 'text', text: txt,
-      color: { r: 255, g: 255, b: 255 },
-      speed: getSpeed()
-    });
-  }
-
-  function sendPersonalText() {
-    const txt = document.getElementById('personalText').value.trim();
-    if (!txt) return;
-    runCommands([
-      { kind: 'text', text: txt, color: C.rose, speed: 220 }
-    ], txt, 'love');
-  }
-
-  function sendPartyText() {
-    const txt = document.getElementById('partyText').value.trim();
-    if (!txt) return;
-    runCommands([
-      { kind: 'effect', name: 'breathe', color: C.gold, speed: 80, brightness: 200 },
-      { kind: 'text', text: txt, color: C.gold, speed: 220 }
-    ], txt, 'party');
-  }
-
-  /* ============================================================
-     UTILITIES
-     ============================================================ */
-  function getBrightness() { return +document.getElementById('brightness').value; }
-  function getSpeed()      { return +document.getElementById('speed').value; }
-  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-  function log(msg, type = 'cmd') {
-    const root = document.getElementById('log');
-    const now = new Date().toLocaleTimeString();
-    const div = document.createElement('div');
-    div.className = 'entry';
-    const safe = String(msg).replace(/[<>]/g, c => ({ '<':'&lt;', '>':'&gt;' }[c]));
-    div.innerHTML = `<span class="ts">${now}</span> <span class="${type}">${safe}</span>`;
-    root.prepend(div);
-    while (root.children.length > 60) root.removeChild(root.lastChild);
-  }
-
-  function toast(msg, isErr = false, kind = null) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'toast show' + (isErr ? ' err' : '') + (kind ? ' ' + kind : '');
-    clearTimeout(el._t);
-    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
-  }
-
-  function setConn(state, text) {
-    const el = document.getElementById('conn');
-    el.dataset.state = state;
-    document.getElementById('connText').textContent = text;
-  }
-
-  function displayHost() {
-    try { return new URL(apiUrl).host; } catch { return apiUrl; }
-  }
-
-  function saveApiUrl() {
-    const v = document.getElementById('apiUrl').value.trim();
-    if (!v) return;
-    apiUrl = v;
-    localStorage.setItem('wrangledApi', v);
-    toast('API URL saved');
-    pingApi();
-  }
-
-  async function pingApi() {
-    setConn('connecting', 'connecting…');
-    try {
-      const res = await fetch(`${apiUrl}/api/devices`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const devices = data.devices || [];
-      if (devices.length === 0) {
-        currentMac = null;
-        currentDevice = null;
-        setConn('err', 'no devices — click to rescan');
-        return;
-      }
-      currentDevice = devices[0];
-      currentMac = currentDevice.mac;
-      setConn('ok', `${currentDevice.name} · ${currentDevice.ip}`);
-    } catch (err) {
-      currentMac = null;
-      setConn('err', 'unreachable — click to retry');
     }
   }
 
@@ -1172,61 +2184,142 @@
     }
   }
 
-  function toggleLog() {
-    document.getElementById('logWrap').classList.toggle('collapsed');
+  /* ============================================================
+     API & UTILS
+     ============================================================ */
+  async function sendCommand(cmd) {
+    if (!currentMac) {
+      log('✗ no device connected', 'err');
+      toast('No device connected', true);
+      return null;
+    }
+    log(`→ ${cmd.kind}${cmd.name ? ':'+cmd.name : ''}`, 'cmd');
+    try {
+      const res = await fetch(`${apiUrl}/api/devices/${currentMac}/commands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cmd)
+      });
+      const result = await res.json();
+      if (result.ok) log(`✓ sent`, 'ok'); else log(`✗ failed`, 'err');
+      return result;
+    } catch (err) {
+      log(`✗ ${err.message}`, 'err');
+      return null;
+    }
+  }
+
+  async function runCommands(commands, label, toastClass) {
+    toast(label || 'sent', false, toastClass);
+    for (const cmd of commands) {
+      await sendCommand(cmd);
+      await wait(150);
+    }
+  }
+
+  function sendLoveBrightness() {
+    const val = +document.getElementById('loveBrightness').value;
+    sendCommand({ kind: 'brightness', brightness: val });
+    toast(`Brightness ${val}`, false, 'love');
+  }
+
+  function getBrightness() { return Math.min(+document.getElementById('brightness').value, 200); }
+  function getSpeed() { return Math.min(+document.getElementById('speed').value, 240); }
+  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function rgbCss(c) { return `rgb(${c.r}, ${c.g}, ${c.b})`; }
+
+  function log(msg, type = 'cmd') {
+    const root = document.getElementById('log');
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.innerHTML = `<span class="ts">${new Date().toLocaleTimeString()}</span> <span class="${type}">${msg}</span>`;
+    root.prepend(div);
+    if (root.children.length > 60) root.removeChild(root.lastChild);
+  }
+
+  function toast(msg, isErr = false, kind = null) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (isErr ? ' err' : '') + (kind ? ' ' + kind : '');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = 'toast'; }, 2400);
+  }
+
+  async function pingApi() {
+    try {
+      const res = await fetch(`${apiUrl}/api/devices`);
+      const data = await res.json();
+      if (data.devices?.length) {
+        currentDevice = data.devices[0];
+        currentMac = currentDevice.mac;
+        setConn('ok', currentDevice.name);
+      } else {
+        setConn('err', 'no devices found');
+      }
+    } catch (err) {
+      setConn('err', 'unreachable');
+    }
+  }
+
+  function saveApiUrl() {
+    const v = document.getElementById('apiUrl').value.trim();
+    if (v) { localStorage.setItem('wrangledApi', v); apiUrl = v; toast('Saved'); pingApi(); }
   }
 
   function switchTab(name) {
     document.body.dataset.tab = name;
-    document.querySelectorAll('.tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === name);
-    });
-    document.querySelectorAll('.pane').forEach(p => {
-      p.classList.toggle('active', p.dataset.pane === name);
-    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
   }
 
-  /* ============================================================
-     INIT
-     ============================================================ */
+  function toggleLog() { document.getElementById('logWrap').classList.toggle('collapsed'); }
+
+  function saveGoogleKey() {
+    const v = document.getElementById('googleKey').value.trim();
+    if (!v) { localStorage.removeItem('googleApiKey'); toast('Google key cleared'); return; }
+    localStorage.setItem('googleApiKey', v);
+    toast('Google key saved');
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
-    // Tab clicks
-    document.querySelectorAll('.tab').forEach(t => {
-      t.onclick = () => switchTab(t.dataset.tab);
-    });
+    document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+    document.getElementById('brightness').oninput = e => document.getElementById('brightnessVal').textContent = e.target.value;
+    document.getElementById('speed').oninput = e => document.getElementById('speedVal').textContent = e.target.value;
+    document.getElementById('wishText').oninput = updateCharCount;
+    document.getElementById('wishText').onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendWish(); };
 
-    // Sliders
-    const bSlider = document.getElementById('brightness');
-    const sSlider = document.getElementById('speed');
-    bSlider.oninput = () => document.getElementById('brightnessVal').textContent = bSlider.value;
-    sSlider.oninput = () => document.getElementById('speedVal').textContent = sSlider.value;
-
-    // API URL field
+    // Fill settings
     document.getElementById('apiUrl').value = apiUrl;
+    document.getElementById('anthropicKey').value = localStorage.getItem('anthropicApiKey') || '';
+    document.getElementById('googleKey').value = localStorage.getItem('googleApiKey') || '';
 
-    // Render all dynamic content
-    renderSwatches();
-    renderEffects();
-    renderPresets();
-    renderMoods();
-    renderAffirmations();
-    renderQuickSends();
-    renderWyatt();
-    renderHonorees();
-    renderPartyScenes();
+    // Initialize global speed
+    const speedSlider = document.getElementById('globalSpeedSlider');
+    const savedSpeed = parseInt(localStorage.getItem(SPEED_KEY) || '215', 10);
+    speedSlider.value = savedSpeed;
+    applyGlobalSpeed(savedSpeed);
+    speedSlider.oninput = () => applyGlobalSpeed(+speedSlider.value);
 
-    // Enter key sends in text fields
-    ['customText', 'personalText', 'partyText'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          if (id === 'customText')  sendCustomText();
-          if (id === 'personalText') sendPersonalText();
-          if (id === 'partyText')    sendPartyText();
-        }
-      });
+    const lbSlider = document.getElementById('loveBrightness');
+    lbSlider.oninput = () => document.getElementById('loveBrightnessVal').textContent = lbSlider.value;
+
+    document.getElementById('shuffleToggle').onchange = (e) => {
+      if (e.target.checked) startShuffle();
+      else stopShuffle();
+    };
+
+    document.querySelectorAll('.whisper-tone').forEach(b => {
+      b.onclick = () => setWhisperTone(b.dataset.tone);
+    });
+    document.querySelectorAll('.whisper-lang').forEach(b => {
+      b.onclick = () => setWhisperLang(b.dataset.lang);
     });
 
-    // Initial connection check
+    renderSwatches(); renderEffects(); renderPresets(); renderMoods();
+    renderAffirmations(); renderQuickSends(); renderWyatt();
+    renderHonorees(); renderReactions(); renderLanguages(); renderFunFacts();
+    renderAiGenButtons();
+    renderWishHistory();
     pingApi();
   });
   </script>
