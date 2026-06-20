@@ -5,3 +5,15 @@
 .slidev-icon-btn {
   display: none !important;
 }
+
+/* Inline code: a consistent dark chip so it stays readable on BOTH
+   light and dark slide backgrounds (the seriph default goes invisible
+   on dark/image slides). Does not affect fenced code blocks. */
+.slidev-layout :not(pre) > code {
+  background: rgba(30, 41, 59, 0.92); /* slate-800 */
+  color: #e2e8f0;                     /* slate-200 */
+  padding: 0.12em 0.4em;
+  border-radius: 0.3em;
+  font-size: 0.88em;
+  font-weight: 500;
+}
