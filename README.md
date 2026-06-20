@@ -253,9 +253,7 @@ Slides cover: the 15-day sprint story, architecture, the Wi-Fi crisis pivot, and
 
 Beyond live LED control, this repo also contains a React + Vite **Command Center** (`apps/dashboard`) that served as the project's interactive build log and project-management dashboard during the sprint — tracking progress across the 15 days toward PyTexas 2026.
 
-![WrangLED dual panels lit](./public/both_panels_lit.jpg)
-
-*(If the image doesn't render, drop the latest dual-panel photo into `public/` as `both_panels_lit.jpg`.)*
+![WrangLED dual panels lit](./apps/dashboard/public/both_panels_lit.jpg)
 
 ---
 
